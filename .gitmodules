@@ -1,0 +1,9 @@
+[submodule "mobilenet"]
+	path = mobilenet
+	url = ./mobilenet/
+[submodule "resnet"]
+	path = resnet
+	url = ./resnet/
+[submodule "efficient_net"]
+	path = efficient_net
+	url = ./efficient_net/
