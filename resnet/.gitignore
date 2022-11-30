@@ -1,0 +1,7 @@
+BUILD*
+#quant_data_ppm
+__pycache__
+run_seep_l2.sh
+testlog
+log_meas
+
