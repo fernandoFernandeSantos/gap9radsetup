@@ -1,9 +1,0 @@
-[submodule "mobilenet"]
-	path = mobilenet
-	url = https://github.com/GreenWaves-Technologies/mobilenet
-[submodule "resnet"]
-	path = resnet
-	url = https://github.com/GreenWaves-Technologies/resnet
-[submodule "efficient_net"]
-	path = efficient_net
-	url = https://github.com/GreenWaves-Technologies/efficient_net
