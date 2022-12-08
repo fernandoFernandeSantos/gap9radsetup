@@ -1,3 +1,4 @@
+set -x
 ID=0
 NE16=1
 START_MODEL=0
