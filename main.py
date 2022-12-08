@@ -38,7 +38,7 @@ def kill_after_error(kill_program_list):
 
 def exec_cmd(cmd: list, path_to_execute: str, app_timeout: float, logger: console_logger.ColoredLogger) -> dict:
     if 'NNTOOL_DIR' not in os.environ:
-        raise EnvironmentError("First set GAP8 ENV vars to execute this!!!")
+        raise EnvironmentError("First set GAP9 ENV vars to execute this!!!")
     env = {}
     env.update(os.environ)
     cwd = os.getcwd()
@@ -49,10 +49,12 @@ def exec_cmd(cmd: list, path_to_execute: str, app_timeout: float, logger: consol
     if logger:
         logger.debug(" ".join(cmd))
     try:
-        p = subprocess.Popen(cmd, env=env, cwd=path_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                             universal_newlines=True)
-        cmd_stdout, cmd_stderr = p.communicate(timeout=app_timeout)
+        # p = subprocess.Popen(cmd, env=env, cwd=path_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        #                      universal_newlines=True)
+
+        # cmd_stdout, cmd_stderr = p.communicate(timeout=app_timeout)
         # remove time from result
+        cmd_stdout, cmd_stderr = "", ""
         split_stderr = cmd_stderr.split("\n")
         cmd_stderr = cmd_stderr.replace(split_stderr[0], "")
         if logger:
@@ -169,7 +171,7 @@ def main():
 
     if generate is True:
         program_and_generate_golds(reprogram=args.reprogram, make_flags=make_parameters, benchmark=args.benchmark,
-                                   logger=terminal_logger)
+                                   gold_path=gold_path, logger=terminal_logger)
     else:
         # Load if it is not a gold generating op
         timer.tic()
