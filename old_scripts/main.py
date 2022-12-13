@@ -31,8 +31,25 @@ class Timer:
         return str(self)
 
 
-def kill_after_error(kill_program_list):
-    for cmd in kill_program_list:
+VFS_PERFORMANCE = "performance"
+VFS_ENERGY = "energy"
+VFS_MIDDLE = "middle"
+
+# TODO: check if this make sense
+VFS_CONFIGURATIONS = {
+    VFS_PERFORMANCE: dict(RAD_FREQ_SET_FC=175 * 1000000, RAD_FREQ_SET_CL=250 * 1000000, RAD_VOLT_SET=1200),
+    VFS_MIDDLE: dict(RAD_FREQ_SET_FC=120 * 1000000, RAD_FREQ_SET_CL=150 * 1000000, RAD_VOLT_SET=1000),
+    VFS_ENERGY: dict(RAD_FREQ_SET_FC=80 * 1000000, RAD_FREQ_SET_CL=100 * 1000000, RAD_VOLT_SET=800),
+}
+
+KILL_PROGRAM_LIST = ["gapy", "gap8-openocd"]
+
+DATA_DIR = "data"
+LOG_PATH = f"{DATA_DIR}/logs"
+
+
+def kill_after_error():
+    for cmd in KILL_PROGRAM_LIST:
         os.system(f"pkill -9 -f {cmd} && killall -9 {cmd}")
 
 

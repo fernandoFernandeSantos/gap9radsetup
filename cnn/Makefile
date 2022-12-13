@@ -1,0 +1,60 @@
+# Copyright (C) 2017 ETH Zurich, University of Bologna and GreenWaves Technologies
+# All rights reserved.
+#
+# This software may be modified and distributed under the terms
+# of the BSD license.  See the LICENSE file for details.
+#//    ---------------        Sequential   ---------------
+#//    i 0 j 0 cur test 0 --                 2x2/2 Max Pool Input: 112x112
+#//    i 1 j 0 cur test 1 --                 2x2/2 Avg Pool Input: 112x112
+#//    i 2 j 0 cur test 2 --               5x5 Convolutions Input: 112x112
+#//    i 3 j 0 cur test 3 --                         Linear Input: 1024x16
+#//    ---------------   Parallel Vector   ---------------
+#//    i 0 j 3 cur test 14 --                 2x2/2 Max Pool Input: 112x112
+#//    i 1 j 3 cur test 15 --                 2x2/2 Avg Pool Input: 112x112
+#//    i 2 j 3 cur test 16 --               5x5 Convolutions Input: 112x112
+#//    i 3 j 3 cur test 17 --                         Linear Input: 1024x16
+ifndef RAD_CNN_OP
+RAD_CNN_OP=2
+endif
+
+##define FREQ_FC (250*1000000)
+##define FREQ_CL (175*1000000)
+ifndef RAD_FREQ_SET_CL
+RAD_FREQ_SET_CL=$(shell echo $$(( 250 * 1000000 )))
+RAD_FREQ_SET_FC=$(shell echo $$(( 175 * 1000000 )))
+RAD_VOLT_SET=1200
+endif
+
+#PULP_APP = cnnOps
+#PULP_APP_FC_SRCS = AllTest.c
+#PULP_CFLAGS = -O2 -g -DRAD_CNN_OP=$(RAD_CNN_OP)
+#PULP_CFLAGS+= -DRAD_FREQ_SET_FC=$(RAD_FREQ_SET_FC) -DRAD_FREQ_SET_CL=$(RAD_FREQ_SET_CL) -DRAD_VOLT_SET=$(RAD_VOLT_SET)
+
+# User Test
+#------------------------------------
+APP              = cnnOps
+# App sources
+APP_SRCS         = AllTest.c
+# App includes
+#APP_INC	         += /home/fernando/git_research/gap9riscvsetup/gap_sdk_private/tests/pulp_tests/old_tests/test_lvds_divider
+# Compiler flags
+APP_CFLAGS       = -O2 -g -DRAD_CNN_OP=$(RAD_CNN_OP) -DRAD_FREQ_SET_FC=$(RAD_FREQ_SET_FC)
+APP_CFLAGS      += -DRAD_FREQ_SET_CL=$(RAD_FREQ_SET_CL) -DRAD_VOLT_SET=$(RAD_VOLT_SET)
+APP_CFLAGS      += -DFREQ_FC=$(FREQ_FC) -DFREQ_CL=$(FREQ_CL) -DFREQ_PE=$(FREQ_PE)
+# Linker flags
+#APP_LDFLAGS      =
+
+# Custom linker
+#APP_LINK_SCRIPT  =
+
+#RISCV STD ISA
+#RISCV_FLAGS = -march=rv32imc -DRISCV
+
+#RISCV STD ISA + GAP8 Extensions
+#RISCV_FLAGS ?= -march=rv32imcxgap8
+#
+#
+#RISCV_FLAGS += -mPE=8 -mFC=1 -D__riscv__
+
+#include $(GAP_SDK_HOME)/utils/rules/pulp_rules.mk
+include $(RULES_DIR)/pmsis_rules.mk

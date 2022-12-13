@@ -25,6 +25,17 @@
 #define __STR(__s) #__s
 
 typedef signed short int NETWORK_OUT_TYPE;
+
+//#ifdef RADIATION_SETUP
+#include "../perf/performance_counter.h"
+//#endif
+#if MOBNET_VERSION == 1
+#include "golden_mobilenetv1.h"
+#elif MOBNET_VERSION == 2
+#include "golden_mobilenetv2.h"
+#endif
+
+
 // Global Variables
 L2_MEM NETWORK_OUT_TYPE
 *
@@ -33,7 +44,7 @@ AT_HYPERFLASH_FS_EXT_ADDR_TYPE AT_L3_ADDR = 0;
 AT_HYPERFLASH_FS_EXT_ADDR_TYPE AT_L3_2_ADDR = 0;
 
 static void RunNetwork() {
-    printf("Running on cluster\n");
+//    printf("Running on cluster\n");
 #ifdef PERF
     printf("Start timer\n");
     gap_cl_starttimer();
@@ -46,6 +57,7 @@ static void RunNetwork() {
 }
 
 int body(void) {
+    start_counters();
     OPEN_GPIO_MEAS();
 
     // Open the cluster
@@ -66,13 +78,17 @@ int body(void) {
     pi_freq_set(PI_FREQ_DOMAIN_FC, FREQ_FC * 1000 * 1000);
     pi_freq_set(PI_FREQ_DOMAIN_CL, FREQ_CL * 1000 * 1000);
     pi_freq_set(PI_FREQ_DOMAIN_PERIPH, FREQ_PE * 1000 * 1000);
-    printf("Set FC Frequency = %d MHz, CL Frequency = %d MHz, PERIIPH Frequency = %d MHz\n",
-           pi_freq_get(PI_FREQ_DOMAIN_FC), pi_freq_get(PI_FREQ_DOMAIN_CL), pi_freq_get(PI_FREQ_DOMAIN_PERIPH));
+//    printf("Set FC Frequency = %d MHz, CL Frequency = %d MHz, PERIIPH Frequency = %d MHz\n",
+//           pi_freq_get(PI_FREQ_DOMAIN_FC), pi_freq_get(PI_FREQ_DOMAIN_CL), pi_freq_get(PI_FREQ_DOMAIN_PERIPH));
 #ifdef VOLTAGE
     pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, VOLTAGE);
     pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, VOLTAGE);
 #endif
-    printf("Voltage: %dmV\n", pi_pmu_voltage_get(PI_PMU_VOLTAGE_DOMAIN_CHIP));
+//    printf("Voltage: %dmV\n", pi_pmu_voltage_get(PI_PMU_VOLTAGE_DOMAIN_CHIP));
+    printf("VOLTAGE:%d FREQ_FC:%d FREQ_CL:%d\n",
+           pi_pmu_voltage_get(PI_PMU_VOLTAGE_DOMAIN_CHIP), pi_freq_get(PI_FREQ_DOMAIN_FC),
+           pi_freq_get(PI_FREQ_DOMAIN_CL));
+
 
     // Allocate the output tensor
     ResOut = (NETWORK_OUT_TYPE *) AT_L2_ALLOC(0, NUM_CLASSES * sizeof(NETWORK_OUT_TYPE));
@@ -98,7 +114,10 @@ int body(void) {
         printf("Failed to load image %s\n", ImageName);
         pmsis_exit(-1);
     }
+#ifndef RADIATION_SETUP
     printf("Finished reading image\n");
+#endif
+
 #endif // FAKE_INPUT
 #ifdef MODEL_HWC // HWC does not have the image formatter in front
     for (int i=0; i<AT_INPUT_SIZE; i++) Input_1[i] -= 128;
@@ -106,13 +125,16 @@ int body(void) {
 
     // Task setup
     struct pi_cluster_task *task = (struct pi_cluster_task *) pi_l2_malloc(sizeof(struct pi_cluster_task));
-
+#ifndef RADIATION_SETUP
     printf("Stack size is %d and %d\n", STACK_SIZE, SLAVE_STACK_SIZE);
     printf("Model:\t%s\n\n", __XSTR(AT_MODEL_PREFIX));
+#endif
+
     pi_cluster_task(task, (void (*)(void *)) &RunNetwork, NULL);
     pi_cluster_task_stacks(task, NULL, SLAVE_STACK_SIZE);
     // Dispatch task on the cluster
     pi_cluster_send_task_to_cl(&cluster_dev, task);
+    end_counters();
 
     //Check Results
     int outclass = 0, MaxPrediction = 0;
@@ -121,11 +143,13 @@ int body(void) {
             outclass = i;
             MaxPrediction = ResOut[i];
         }
+        if (golden_output[i] != ResOut[i]) {
+            printf("Error:[%ld]=%d != %d\n", i, golden_output[i], ResOut[i]);
+        }
     }
-    printf("Predicted class:\t%d\n", outclass);
-    printf("With confidence:\t%d\n", MaxPrediction);
-
-
+#ifndef RADIATION_SETUP
+    printf("Predicted:%d, Confidence:%d\n", outclass, MaxPrediction);
+#endif
     // Performance counters
 #ifdef PERF
     {
@@ -143,10 +167,11 @@ int body(void) {
     }
 #endif
 
-    // Netwrok Destructor
+    // Network Destructor
     AT_DESTRUCT();
     AT_L2_FREE(0, ResOut, NUM_CLASSES * sizeof(NETWORK_OUT_TYPE));
     pi_cluster_close(&cluster_dev);
+#ifndef RADIATION_SETUP
     if ((strcmp(__XSTR(AT_MODEL_PREFIX), "mobilenet_v1_1_0_224_quant") == 0) ||
         (strcmp(__XSTR(AT_MODEL_PREFIX), "mobilenet_v2_1_0_224_quant") == 0)) {
         if (outclass == 42) {
@@ -157,14 +182,14 @@ int body(void) {
             pmsis_exit(-1);
         }
     }
+#endif
     pmsis_exit(0);
-
     return 0;
 }
 
 
 int main(void) {
-    printf("\n\n\t *** ImageNet classification on GAP ***\n");
+//    printf("\n\n\t *** ImageNet classification on GAP ***\n");
     return pmsis_kickoff((void *) body);
 }
 
