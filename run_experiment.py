@@ -97,11 +97,17 @@ CODES_CONFIG = {
     #
     CNN_OP: {
         "path": f"{GIT_RESEARCH}/dnnradtestgap9//{CNN_OP}",
-        "exec": 'openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" -f '
-                '"/home/fernando/git_research/gap9riscvsetup/gap_sdk_private/utils/openocd_tools/tcl/'
-                'gapuino_ftdi.cfg" -f "/home/fernando/git_research/gap9riscvsetup/gap_sdk_private/utils/'
-                'openocd_tools/tcl/gap9revb.tcl" -c "load_and_start_binary /home/fernando/git_research/'
-                'gap9riscvsetup/dnnradtestgap9/cnn/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/cnnOps 0x1c010100"',
+        "exec": '/home/fernando/git_research/gap9riscvsetup/gap_sdk_private/utils/gapy_v2/bin/gapy '
+                '--target=gap9.evk '
+                '--target-dir=/home/fernando/git_research/gap9riscvsetup/gap_sdk_private/utils/gapy_v2/targets '
+                '--platform=board --work-dir=/home/fernando/git_research/gap9riscvsetup/dnnradtestgap9'
+                '/cnn/BUILD/GAP9_V2/GCC_RISCV_FREERTOS --binary=/home/fernando/git_research/gap9riscvsetup/'
+                'dnnradtestgap9/cnn/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/cnnOps --config-opt=**/runner/boot/mode=jtag    '
+                '--flash-property=0@flash:lfs:size --openocd-cable=/home/fernando/git_research/gap9riscvsetup/'
+                'gap_sdk_private/utils/openocd_tools/tcl/gapuino_ftdi.cfg --openocd-script=/home/fernando/git_research/'
+                'gap9riscvsetup/gap_sdk_private/utils/openocd_tools/tcl/gap9revb.tcl --openocd-tools=/home/fernando/'
+                'git_research/gap9riscvsetup/gap_sdk_private/utils/openocd_tools --flash-property=/home/fernando/'
+                'git_research/gap9riscvsetup/gap_sdk_private/utils/ssbl/bin/ssbl-gap9_evk@mram:rom:binary run',
         "timeout": 500,
         "make_parameters": []
     },
