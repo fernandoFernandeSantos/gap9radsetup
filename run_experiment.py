@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 import argparse
-import getpass
 import json
 import logging
 import os
@@ -50,8 +49,12 @@ GENERAL_TIMEOUT = 50
 MAX_SEQUENTIALLY_ERRORS = 2
 SLEEP_AFTER_MULTIPLE_ERRORS = 120
 
-GIT_RESEARCH = f"/home/{getpass.getuser()}/git_research/gap9riscvsetup"
-GAP_SDK_DIR = f"{GIT_RESEARCH}/gap_sdk_private"
+try:
+    GAP_SDK_DIR = os.environ["GAP_SDK_DIR_RAD"]
+except EnvironmentError:
+    raise EnvironmentError("Set the GAP_SDK_DIR_RAD env var first")
+
+SETUP_PATH = f"{os.path.abspath(os.getcwd())}"
 # EXAMPLES_DIR = f"{GAP_SDK_DIR}/examples"
 # EXAMPLES_AUTOTILER_DIR = f"{EXAMPLES_DIR}/autotiler"
 # EXAMPLES_PMSIS_DIR = f"{EXAMPLES_DIR}/pmsis"
@@ -62,13 +65,14 @@ SWITCH_IP = "130.246.247.141"
 
 CODES_CONFIG = {
     MXM: {
-        "path": f"{GIT_RESEARCH}/dnnradtestgap9/{MXM}",
+        "path": f"{SETUP_PATH}/{MXM}",
         "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
                 f'--target=gap9.evk '
                 f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
                 f'--platform=board '
-                f'--work-dir={GIT_RESEARCH}/dnnradtestgap9/{MXM}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
-                f'--binary={GIT_RESEARCH}/dnnradtestgap9/{MXM}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{MXM} '
+                f'--work-dir={SETUP_PATH}/{MXM}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
+                f'--binary={SETUP_PATH}/{MXM}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS'
+                f'{GAP_SDK_DIR}/tools/autotiler_v3/Generators/{MXM} '
                 f'--config-opt=**/runner/boot/mode=jtag    '
                 f'--flash-property=0@flash:lfs:size '
                 f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg'
@@ -107,13 +111,13 @@ CODES_CONFIG = {
     # },
     #
     CNN_OP: {
-        "path": f"{GIT_RESEARCH}/dnnradtestgap9/{CNN_OP}",
+        "path": f"{SETUP_PATH}/{CNN_OP}",
         "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
                 f'--target=gap9.evk '
                 f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
                 f'--platform=board '
-                f'--work-dir={GIT_RESEARCH}/dnnradtestgap9/{CNN_OP}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
-                f'--binary={GIT_RESEARCH}/dnnradtestgap9/{CNN_OP}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/cnnOps '
+                f'--work-dir={SETUP_PATH}/{CNN_OP}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
+                f'--binary={SETUP_PATH}/{CNN_OP}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/cnnOps '
                 f'--config-opt=**/runner/boot/mode=jtag    '
                 f'--flash-property=0@flash:lfs:size '
                 f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg'
@@ -125,7 +129,7 @@ CODES_CONFIG = {
     },
 
     MOBILENET_V1: {
-        "path": f"{GIT_RESEARCH}/dnnradtestgap9/mobilenet",
+        "path": f"{SETUP_PATH}/mobilenet",
         "exec": 'openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" -f '
                 f'"{GAP_SDK_DIR}/utils/openocd_tools/tcl/'
                 f'gapuino_ftdi.cfg" -f "{GAP_SDK_DIR}/utils/'
@@ -135,7 +139,7 @@ CODES_CONFIG = {
         "make_parameters": ["MOBNET_VERSION=1"]
     },
     MOBILENET_V2: {
-        "path": f"{GIT_RESEARCH}/dnnradtestgap9/mobilenet",
+        "path": f"{SETUP_PATH}/mobilenet",
         "exec": [],
         "timeout": GENERAL_TIMEOUT,
         "make_parameters": ["MOBNET_VERSION=2"]

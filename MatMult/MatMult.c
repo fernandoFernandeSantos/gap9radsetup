@@ -42,9 +42,7 @@ int main(void) {
     pi_freq_set(PI_FREQ_DOMAIN_CL, FREQ_CL * 1000 * 1000);
     pi_freq_set(PI_FREQ_DOMAIN_PERIPH, FREQ_PE * 1000 * 1000);
 
-    cur_test = RAD_CNN_OP;
-    printf("constMxM VOLTAGE:%d FREQ_FC:%d FREQ_CL:%d\n", RAD_CNN_OP,
-           tests_names[RAD_CNN_OP], pi_pmu_voltage_get(PI_PMU_VOLTAGE_DOMAIN_CHIP),
+    printf("constMxM VOLTAGE:%d FREQ_FC:%d FREQ_CL:%d\n", pi_pmu_voltage_get(PI_PMU_VOLTAGE_DOMAIN_CHIP),
            pi_freq_get(PI_FREQ_DOMAIN_FC),
            pi_freq_get(PI_FREQ_DOMAIN_CL));
 
