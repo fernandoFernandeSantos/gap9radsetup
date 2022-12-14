@@ -58,4 +58,4 @@ add_executable(
         mobilenet/main_fp16.c
         resnet/main.c
         resnet/ResNet.h
-        perf/performance_counter.h cnn/AllTest.c)
+        perf/performance_counter.h cnn/AllTest.c MatMult/MatMult.c)

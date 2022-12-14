@@ -50,23 +50,33 @@ GENERAL_TIMEOUT = 50
 MAX_SEQUENTIALLY_ERRORS = 2
 SLEEP_AFTER_MULTIPLE_ERRORS = 120
 
-USERNAME = getpass.getuser()
-GIT_RESEARCH = f"/home/{USERNAME}/git_research/gap9riscvsetup"
-GAP_SDK_DIR = f"{GIT_RESEARCH}/gap_sdk_beam/gap9riscvsetup/gap_sdk_private"
-EXAMPLES_DIR = f"{GAP_SDK_DIR}/examples"
-EXAMPLES_AUTOTILER_DIR = f"{EXAMPLES_DIR}/autotiler"
-EXAMPLES_PMSIS_DIR = f"{EXAMPLES_DIR}/pmsis"
-EXAMPLES_BENCHMARKS_DIR = f"{GAP_SDK_DIR}/benchmarks/gap8"
+GIT_RESEARCH = f"/home/{getpass.getuser()}/git_research/gap9riscvsetup"
+GAP_SDK_DIR = f"{GIT_RESEARCH}/gap_sdk_private"
+# EXAMPLES_DIR = f"{GAP_SDK_DIR}/examples"
+# EXAMPLES_AUTOTILER_DIR = f"{EXAMPLES_DIR}/autotiler"
+# EXAMPLES_PMSIS_DIR = f"{EXAMPLES_DIR}/pmsis"
+# EXAMPLES_BENCHMARKS_DIR = f"{GAP_SDK_DIR}/benchmarks/gap8"
 
 HOST_IP = "130.246.247.140"
 SWITCH_IP = "130.246.247.141"
 
 CODES_CONFIG = {
-    # MXM: {
-    #     "path": "",
-    #     "exec": [],
-    #     "timeout": GENERAL_TIMEOUT,
-    # },
+    MXM: {
+        "path": f"{GIT_RESEARCH}/dnnradtestgap9/{MXM}",
+        "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
+                f'--target=gap9.evk '
+                f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
+                f'--platform=board '
+                f'--work-dir={GIT_RESEARCH}/dnnradtestgap9/{MXM}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
+                f'--binary={GIT_RESEARCH}/dnnradtestgap9/{MXM}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{MXM} '
+                f'--config-opt=**/runner/boot/mode=jtag    '
+                f'--flash-property=0@flash:lfs:size '
+                f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg'
+                f' --openocd-script={GAP_SDK_DIR}/utils/openocd_tools/tcl/gap9revb.tcl '
+                f'--openocd-tools={GAP_SDK_DIR}/utils/openocd_tools '
+                f'--flash-property={GAP_SDK_DIR}/utils/ssbl/bin/ssbl-gap9_evk@mram:rom:binary run',
+        "timeout": GENERAL_TIMEOUT,
+    },
     # MMAD: {
     #     "path": f" ",
     #     "exec": [],
@@ -96,18 +106,19 @@ CODES_CONFIG = {
     # },
     #
     CNN_OP: {
-        "path": f"{GIT_RESEARCH}/dnnradtestgap9//{CNN_OP}",
-        "exec": '/home/fernando/git_research/gap9riscvsetup/gap_sdk_private/utils/gapy_v2/bin/gapy '
-                '--target=gap9.evk '
-                '--target-dir=/home/fernando/git_research/gap9riscvsetup/gap_sdk_private/utils/gapy_v2/targets '
-                '--platform=board --work-dir=/home/fernando/git_research/gap9riscvsetup/dnnradtestgap9'
-                '/cnn/BUILD/GAP9_V2/GCC_RISCV_FREERTOS --binary=/home/fernando/git_research/gap9riscvsetup/'
-                'dnnradtestgap9/cnn/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/cnnOps --config-opt=**/runner/boot/mode=jtag    '
-                '--flash-property=0@flash:lfs:size --openocd-cable=/home/fernando/git_research/gap9riscvsetup/'
-                'gap_sdk_private/utils/openocd_tools/tcl/gapuino_ftdi.cfg --openocd-script=/home/fernando/git_research/'
-                'gap9riscvsetup/gap_sdk_private/utils/openocd_tools/tcl/gap9revb.tcl --openocd-tools=/home/fernando/'
-                'git_research/gap9riscvsetup/gap_sdk_private/utils/openocd_tools --flash-property=/home/fernando/'
-                'git_research/gap9riscvsetup/gap_sdk_private/utils/ssbl/bin/ssbl-gap9_evk@mram:rom:binary run',
+        "path": f"{GIT_RESEARCH}/dnnradtestgap9/{CNN_OP}",
+        "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
+                f'--target=gap9.evk '
+                f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
+                f'--platform=board '
+                f'--work-dir={GIT_RESEARCH}/dnnradtestgap9/{CNN_OP}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
+                f'--binary={GIT_RESEARCH}/dnnradtestgap9/{CNN_OP}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/cnnOps '
+                f'--config-opt=**/runner/boot/mode=jtag    '
+                f'--flash-property=0@flash:lfs:size '
+                f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg'
+                f' --openocd-script={GAP_SDK_DIR}/utils/openocd_tools/tcl/gap9revb.tcl '
+                f'--openocd-tools={GAP_SDK_DIR}/utils/openocd_tools '
+                f'--flash-property={GAP_SDK_DIR}/utils/ssbl/bin/ssbl-gap9_evk@mram:rom:binary run',
         "timeout": 500,
         "make_parameters": []
     },
@@ -115,9 +126,9 @@ CODES_CONFIG = {
     MOBILENET_V1: {
         "path": f"{GIT_RESEARCH}/dnnradtestgap9/mobilenet",
         "exec": 'openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" -f '
-                '"/home/fernando/git_research/gap9riscvsetup/gap_sdk_private/utils/openocd_tools/tcl/'
-                'gapuino_ftdi.cfg" -f "/home/fernando/git_research/gap9riscvsetup/gap_sdk_private/utils/'
-                'openocd_tools/tcl/gap9revb.tcl" -c "load_and_start_binary /home/fernando/git_research/'
+                f'"{GAP_SDK_DIR}/utils/openocd_tools/tcl/'
+                f'gapuino_ftdi.cfg" -f "{GAP_SDK_DIR}/utils/'
+                'openocd_tools/tcl/gap9revb.tcl" -c "load_and_start_binary {GIT_RESEARCH}/'
                 'gap9riscvsetup/dnnradtestgap9/mobilenet/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/imagenet 0x1c010100"',
         "timeout": 300,
         "make_parameters": ["MOBNET_VERSION=1"]

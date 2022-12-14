@@ -38,7 +38,7 @@ APP_SRCS         = AllTest.c
 # App includes
 #APP_INC	         += /home/fernando/git_research/gap9riscvsetup/gap_sdk_private/tests/pulp_tests/old_tests/test_lvds_divider
 # Compiler flags
-APP_CFLAGS       = -O2 -g -DRAD_CNN_OP=$(RAD_CNN_OP) -DRAD_FREQ_SET_FC=$(RAD_FREQ_SET_FC)
+APP_CFLAGS       = -O3 -DRAD_CNN_OP=$(RAD_CNN_OP) -DRAD_FREQ_SET_FC=$(RAD_FREQ_SET_FC)
 APP_CFLAGS      += -DRAD_FREQ_SET_CL=$(RAD_FREQ_SET_CL) -DRAD_VOLT_SET=$(RAD_VOLT_SET)
 APP_CFLAGS      += -DFREQ_FC=$(FREQ_FC) -DFREQ_CL=$(FREQ_CL) -DFREQ_PE=$(FREQ_PE)
 # Linker flags
