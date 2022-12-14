@@ -13,7 +13,7 @@
 #include "Gap.h"
 #include "ResizeKernels.h"
 
-#include "../performance_counter.h"
+#include "../perf/performance_counter.h"
 
 #define STACK_SIZE ( 1024 * 2 )
 #define CID        ( 0 )
