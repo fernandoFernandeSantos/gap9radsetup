@@ -249,7 +249,7 @@ def program_and_generate_golds(reprogram: bool, make_flags: List[str], benchmark
     for benchmark in gen_bench:
         bench_path = CODES_CONFIG[benchmark]["path"]
         bench_exec = CODES_CONFIG[benchmark]["exec"]
-        bench_timeout = CODES_CONFIG[benchmark]["timeout"]
+        bench_timeout = CODES_CONFIG[benchmark]["timeout"] * 20
         if reprogram is True:
             print(f"Programing {benchmark} path {bench_path}")
             make_cmd = " ".join(["make", "clean", "all"] + make_flags)
