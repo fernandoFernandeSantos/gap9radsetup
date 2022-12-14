@@ -86,14 +86,20 @@ int main(void) {
     }
 
 //    for (uint32_t i = 0; i < (W_M1 * H_M1); i++) {
-//        M1[i] = i;
+//        M1[i] = i + 1;
 //    }
-    for (uint32_t i = 0; i < (W_M2 * H_M2); i++) {
-        M2[i] = i + 1;
+    for (uint32_t i = 0; i < H_M1; i++) {
+        for (uint32_t j = 0; j < W_M1; j++) {
+            M1[i * W_M1 + j] = 2;
+        }
     }
-    for (uint32_t i = 0; i < (W_Out * H_Out); i++) {
-//        Out1[i] = 0;
-        Out2[i] = 0;
+//    for (uint32_t i = 0; i < (W_M2 * H_M2); i++) {
+//        M2[i] = 2;
+//    }
+    for (uint32_t i = 0; i < H_M2; i++) {
+        for (uint32_t j = 0; j < W_M2; j++) {
+            M2[i * W_M2 + j] = i + 1;
+        }
     }
 
     struct pi_device cluster_dev;
