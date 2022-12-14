@@ -99,7 +99,7 @@ CODES_CONFIG = {
                 f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
                 f'--platform=board '
                 f'--work-dir={SETUP_PATH}/{BILINEAR_RESIZE}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
-                f'--binary={SETUP_PATH}/{BILINEAR_RESIZE}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{BILINEAR_RESIZE} '
+                f'--binary={SETUP_PATH}/{BILINEAR_RESIZE}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/Bilinear_Resize '
                 f'--config-opt=**/runner/boot/mode=jtag    '
                 f'--flash-property=0@flash:lfs:size '
                 f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg '
