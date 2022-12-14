@@ -92,11 +92,23 @@ CODES_CONFIG = {
     #     "timeout": GENERAL_TIMEOUT,
     # },
     #
-    # BILINEAR_RESIZE: {
-    #     "path": f"{EXAMPLES_AUTOTILER_DIR}/{BILINEAR_RESIZE}",
-    #     "exec": [],
-    #     "timeout": GENERAL_TIMEOUT,
-    # },
+    BILINEAR_RESIZE: {
+        "path": f"{SETUP_PATH}/{BILINEAR_RESIZE}",
+        "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
+                f'--target=gap9.evk '
+                f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
+                f'--platform=board '
+                f'--work-dir={SETUP_PATH}/{BILINEAR_RESIZE}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
+                f'--binary={SETUP_PATH}/{BILINEAR_RESIZE}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{BILINEAR_RESIZE} '
+                f'--config-opt=**/runner/boot/mode=jtag    '
+                f'--flash-property=0@flash:lfs:size '
+                f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg '
+                f'--openocd-script={GAP_SDK_DIR}/utils/openocd_tools/tcl/gap9revb.tcl '
+                f'--openocd-tools={GAP_SDK_DIR}/utils/openocd_tools '
+                f'--flash-property={GAP_SDK_DIR}/utils/ssbl/bin/ssbl-gap9_evk@mram:rom:binary run',
+        "timeout": GENERAL_TIMEOUT,
+        "make_parameters": ["run"]
+    },
     #
     # MEM_TEST: {
     #     "path": f"{EXAMPLES_PMSIS_DIR}/{MEM_TEST}",
