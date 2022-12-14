@@ -54,7 +54,7 @@ try:
 except EnvironmentError:
     raise EnvironmentError("Set the GAP_SDK_DIR_RAD env var first")
 
-SETUP_PATH = f"{os.path.abspath(os.getcwd())}"
+SETUP_PATH = os.path.abspath(os.getcwd())
 # EXAMPLES_DIR = f"{GAP_SDK_DIR}/examples"
 # EXAMPLES_AUTOTILER_DIR = f"{EXAMPLES_DIR}/autotiler"
 # EXAMPLES_PMSIS_DIR = f"{EXAMPLES_DIR}/pmsis"
@@ -71,12 +71,11 @@ CODES_CONFIG = {
                 f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
                 f'--platform=board '
                 f'--work-dir={SETUP_PATH}/{MXM}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
-                f'--binary={SETUP_PATH}/{MXM}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS'
-                f'{GAP_SDK_DIR}/tools/autotiler_v3/Generators/{MXM} '
+                f'--binary={SETUP_PATH}/{MXM}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{MXM} '
                 f'--config-opt=**/runner/boot/mode=jtag    '
                 f'--flash-property=0@flash:lfs:size '
-                f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg'
-                f' --openocd-script={GAP_SDK_DIR}/utils/openocd_tools/tcl/gap9revb.tcl '
+                f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg '
+                f'--openocd-script={GAP_SDK_DIR}/utils/openocd_tools/tcl/gap9revb.tcl '
                 f'--openocd-tools={GAP_SDK_DIR}/utils/openocd_tools '
                 f'--flash-property={GAP_SDK_DIR}/utils/ssbl/bin/ssbl-gap9_evk@mram:rom:binary run',
         "timeout": GENERAL_TIMEOUT,
