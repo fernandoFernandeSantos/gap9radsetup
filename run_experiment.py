@@ -79,7 +79,7 @@ CODES_CONFIG = {
                 f'--openocd-tools={GAP_SDK_DIR}/utils/openocd_tools '
                 f'--flash-property={GAP_SDK_DIR}/utils/ssbl/bin/ssbl-gap9_evk@mram:rom:binary run',
         "timeout": GENERAL_TIMEOUT,
-        "make_parameters": []
+        "make_parameters": ["run"]
     },
     # MMAD: {
     #     "path": f" ",
