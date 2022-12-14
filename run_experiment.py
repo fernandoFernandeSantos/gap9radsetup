@@ -81,17 +81,41 @@ CODES_CONFIG = {
         "timeout": GENERAL_TIMEOUT,
         "make_parameters": ["run"]
     },
-    # MMAD: {
-    #     "path": f" ",
-    #     "exec": [],
-    #     "timeout": GENERAL_TIMEOUT,
-    # },
-    # MNIST: {
-    #     "path": f" ",
-    #     "exec": [f" "],
-    #     "timeout": GENERAL_TIMEOUT,
-    # },
-    #
+    MMAD: {
+        "path": f"{SETUP_PATH}/{MMAD}",
+        "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
+                f'--target=gap9.evk '
+                f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
+                f'--platform=board '
+                f'--work-dir={SETUP_PATH}/{MMAD}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
+                f'--binary={SETUP_PATH}/{MMAD}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{MMAD} '
+                f'--config-opt=**/runner/boot/mode=jtag    '
+                f'--flash-property=0@flash:lfs:size '
+                f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg '
+                f'--openocd-script={GAP_SDK_DIR}/utils/openocd_tools/tcl/gap9revb.tcl '
+                f'--openocd-tools={GAP_SDK_DIR}/utils/openocd_tools '
+                f'--flash-property={GAP_SDK_DIR}/utils/ssbl/bin/ssbl-gap9_evk@mram:rom:binary run',
+        "timeout": GENERAL_TIMEOUT,
+        "make_parameters": ["run"]
+    },
+    MNIST: {
+        "path": f"{SETUP_PATH}/{MNIST}",
+        "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
+                f'--target=gap9.evk '
+                f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
+                f'--platform=board '
+                f'--work-dir={SETUP_PATH}/{MNIST}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
+                f'--binary={SETUP_PATH}/{MNIST}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{MNIST} '
+                f'--config-opt=**/runner/boot/mode=jtag    '
+                f'--flash-property=0@flash:lfs:size '
+                f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg '
+                f'--openocd-script={GAP_SDK_DIR}/utils/openocd_tools/tcl/gap9revb.tcl '
+                f'--openocd-tools={GAP_SDK_DIR}/utils/openocd_tools '
+                f'--flash-property={GAP_SDK_DIR}/utils/ssbl/bin/ssbl-gap9_evk@mram:rom:binary run',
+        "timeout": GENERAL_TIMEOUT,
+        "make_parameters": ["run"]
+    },
+
     BILINEAR_RESIZE: {
         "path": f"{SETUP_PATH}/{BILINEAR_RESIZE}",
         "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
@@ -109,18 +133,7 @@ CODES_CONFIG = {
         "timeout": GENERAL_TIMEOUT,
         "make_parameters": ["run"]
     },
-    #
-    # MEM_TEST: {
-    #     "path": f"{EXAMPLES_PMSIS_DIR}/{MEM_TEST}",
-    #     "exec": [
-    #         f"gapy", "--target=gapuino_v2", "--platform=board",
-    #         f"--work-dir={EXAMPLES_PMSIS_DIR}/{MEM_TEST}/BUILD/GAP8_V2/GCC_RISCV",
-    #         "run", "--exec-prepare", "--exec",
-    #         f"--binary={EXAMPLES_PMSIS_DIR}/{MEM_TEST}/BUILD/GAP8_V2/GCC_RISCV/{MEM_TEST}"
-    #     ],
-    #     "timeout": 100,
-    # },
-    #
+
     CNN_OP: {
         "path": f"{SETUP_PATH}/{CNN_OP}",
         "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
@@ -138,23 +151,34 @@ CODES_CONFIG = {
         "timeout": 500,
         "make_parameters": []
     },
-
-    MOBILENET_V1: {
-        "path": f"{SETUP_PATH}/mobilenet",
-        "exec": 'openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" -f '
-                f'"{GAP_SDK_DIR}/utils/openocd_tools/tcl/'
-                f'gapuino_ftdi.cfg" -f "{GAP_SDK_DIR}/utils/'
-                'openocd_tools/tcl/gap9revb.tcl" -c "load_and_start_binary {GIT_RESEARCH}/'
-                'gap9riscvsetup/dnnradtestgap9/mobilenet/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/imagenet 0x1c010100"',
-        "timeout": 300,
-        "make_parameters": ["MOBNET_VERSION=1"]
-    },
-    MOBILENET_V2: {
-        "path": f"{SETUP_PATH}/mobilenet",
-        "exec": [],
-        "timeout": GENERAL_TIMEOUT,
-        "make_parameters": ["MOBNET_VERSION=2"]
-    }
+    #
+    # MEM_TEST: {
+    #     "path": f"{EXAMPLES_PMSIS_DIR}/{MEM_TEST}",
+    #     "exec": [
+    #         f"gapy", "--target=gapuino_v2", "--platform=board",
+    #         f"--work-dir={EXAMPLES_PMSIS_DIR}/{MEM_TEST}/BUILD/GAP8_V2/GCC_RISCV",
+    #         "run", "--exec-prepare", "--exec",
+    #         f"--binary={EXAMPLES_PMSIS_DIR}/{MEM_TEST}/BUILD/GAP8_V2/GCC_RISCV/{MEM_TEST}"
+    #     ],
+    #     "timeout": 100,
+    # },
+    #
+    # MOBILENET_V1: {
+    #     "path": f"{SETUP_PATH}/mobilenet",
+    #     "exec": 'openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" -f '
+    #             f'"{GAP_SDK_DIR}/utils/openocd_tools/tcl/'
+    #             f'gapuino_ftdi.cfg" -f "{GAP_SDK_DIR}/utils/'
+    #             'openocd_tools/tcl/gap9revb.tcl" -c "load_and_start_binary {GIT_RESEARCH}/'
+    #             'gap9riscvsetup/dnnradtestgap9/mobilenet/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/imagenet 0x1c010100"',
+    #     "timeout": 300,
+    #     "make_parameters": ["MOBNET_VERSION=1"]
+    # },
+    # MOBILENET_V2: {
+    #     "path": f"{SETUP_PATH}/mobilenet",
+    #     "exec": [],
+    #     "timeout": GENERAL_TIMEOUT,
+    #     "make_parameters": ["MOBNET_VERSION=2"]
+    # }
 }
 
 VFS_PERFORMANCE = "performance"
@@ -164,8 +188,8 @@ VFS_MIDDLE = "middle"
 # TODO: check if this make sense
 VFS_CONFIGURATIONS = {
     VFS_PERFORMANCE: dict(RAD_FREQ_SET_FC=370, RAD_FREQ_SET_CL=370, RAD_VOLT_SET=800),
-    # VFS_MIDDLE: dict(RAD_FREQ_SET_FC=120 * 1000000, RAD_FREQ_SET_CL=150 * 1000000, RAD_VOLT_SET=1000),
-    VFS_ENERGY: dict(RAD_FREQ_SET_FC=240, RAD_FREQ_SET_CL=240, RAD_VOLT_SET=800),
+    VFS_MIDDLE: dict(RAD_FREQ_SET_FC=300, RAD_FREQ_SET_CL=300, RAD_VOLT_SET=650),
+    VFS_ENERGY: dict(RAD_FREQ_SET_FC=240, RAD_FREQ_SET_CL=240, RAD_VOLT_SET=650),
 }
 
 KILL_PROGRAM_LIST = ["gapy", "openocd"]
