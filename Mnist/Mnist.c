@@ -164,7 +164,14 @@ uint8_t compare_output(int its, uint32_t errors_setup) {
 
 int main(void) {
 //    printf("Entering main controller\n");
-
+    pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, RAD_VOLT_SET);
+    pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, RAD_VOLT_SET);
+    pi_freq_set(PI_FREQ_DOMAIN_FC, FREQ_FC * 1000 * 1000);
+    pi_freq_set(PI_FREQ_DOMAIN_CL, FREQ_CL * 1000 * 1000);
+    pi_freq_set(PI_FREQ_DOMAIN_PERIPH, FREQ_PE * 1000 * 1000);
+    printf("constMxM VOLTAGE:%d FREQ_FC:%d FREQ_CL:%d\n", pi_pmu_voltage_get(PI_PMU_VOLTAGE_DOMAIN_CHIP),
+           pi_freq_get(PI_FREQ_DOMAIN_FC),
+           pi_freq_get(PI_FREQ_DOMAIN_CL));
     uint8_t CheckResults = 0;
     uint32_t errors = 0;
     char *image_name = NAME;

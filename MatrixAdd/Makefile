@@ -17,6 +17,10 @@ APP_INC += . $(TILER_EMU_INC) $(TILER_INC) $(MATADD_KER_PATH)
 APP_CFLAGS += -O3 -mno-memcpy -fno-tree-loop-distribute-patterns
 APP_CFLAGS += -Wno-maybe-uninitialized -Wno-unused-but-set-variable -Wno-unused-variable
 
+APP_CFLAGS      += -DRAD_CNN_OP=$(RAD_CNN_OP) -DRAD_FREQ_SET_FC=$(RAD_FREQ_SET_FC)
+APP_CFLAGS      += -DRAD_FREQ_SET_CL=$(RAD_FREQ_SET_CL) -DRAD_VOLT_SET=$(RAD_VOLT_SET)
+APP_CFLAGS      += -DFREQ_FC=$(FREQ_FC) -DFREQ_CL=$(FREQ_CL) -DFREQ_PE=$(FREQ_PE)
+
 MODEL_SRC = MatAddModel.c
 MODEL_GEN = MatAddKernels
 MODEL_GEN_C = $(addsuffix .c, $(MODEL_GEN))

@@ -32,6 +32,11 @@ APP_INC += $(TILER_INC) $(TILER_EMU_INC) $(GAP_SDK_HOME)/libs/gap_lib/include
 
 APP_CFLAGS += -w -O3 -mno-memcpy -fno-tree-loop-distribute-patterns -fdata-sections -ffunction-sections
 APP_CFLAGS += -Wno-maybe-uninitialized -Wno-unused-but-set-variable $(CNN_LIB_INCLUDE)
+
+APP_CFLAGS      += -DRAD_CNN_OP=$(RAD_CNN_OP) -DRAD_FREQ_SET_FC=$(RAD_FREQ_SET_FC)
+APP_CFLAGS      += -DRAD_FREQ_SET_CL=$(RAD_FREQ_SET_CL) -DRAD_VOLT_SET=$(RAD_VOLT_SET)
+APP_CFLAGS      += -DFREQ_FC=$(FREQ_FC) -DFREQ_CL=$(FREQ_CL) -DFREQ_PE=$(FREQ_PE)
+
 LDFLAGS    +=  -flto -Wl,--gc-sections
 
 
