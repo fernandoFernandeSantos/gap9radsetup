@@ -1,4 +1,4 @@
-BUILD*
+BUILD
 *.dat
 log*
 test_gvsoc_emul

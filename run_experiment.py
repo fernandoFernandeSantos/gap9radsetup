@@ -55,23 +55,20 @@ except EnvironmentError:
     raise EnvironmentError("Set the GAP_SDK_DIR_RAD env var first")
 
 SETUP_PATH = os.path.abspath(os.getcwd())
-# EXAMPLES_DIR = f"{GAP_SDK_DIR}/examples"
-# EXAMPLES_AUTOTILER_DIR = f"{EXAMPLES_DIR}/autotiler"
-# EXAMPLES_PMSIS_DIR = f"{EXAMPLES_DIR}/pmsis"
-# EXAMPLES_BENCHMARKS_DIR = f"{GAP_SDK_DIR}/benchmarks/gap8"
+BENCHMARKS_DIR = f"{SETUP_PATH}/benchmarks"
 
 HOST_IP = "130.246.247.140"
 SWITCH_IP = "130.246.247.141"
 
 CODES_CONFIG = {
     MXM: {
-        "path": f"{SETUP_PATH}/{MXM}",
+        "path": f"{BENCHMARKS_DIR}/{MXM}",
         "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
                 f'--target=gap9.evk '
                 f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
                 f'--platform=board '
-                f'--work-dir={SETUP_PATH}/{MXM}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
-                f'--binary={SETUP_PATH}/{MXM}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{MXM} '
+                f'--work-dir={BENCHMARKS_DIR}/{MXM}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
+                f'--binary={BENCHMARKS_DIR}/{MXM}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{MXM} '
                 f'--config-opt=**/runner/boot/mode=jtag    '
                 f'--flash-property=0@flash:lfs:size '
                 f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg '
@@ -82,13 +79,13 @@ CODES_CONFIG = {
         "make_parameters": ["run"]
     },
     MMAD: {
-        "path": f"{SETUP_PATH}/{MMAD}",
+        "path": f"{BENCHMARKS_DIR}/{MMAD}",
         "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
                 f'--target=gap9.evk '
                 f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
                 f'--platform=board '
-                f'--work-dir={SETUP_PATH}/{MMAD}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
-                f'--binary={SETUP_PATH}/{MMAD}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{MMAD} '
+                f'--work-dir={BENCHMARKS_DIR}/{MMAD}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
+                f'--binary={BENCHMARKS_DIR}/{MMAD}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{MMAD} '
                 f'--config-opt=**/runner/boot/mode=jtag    '
                 f'--flash-property=0@flash:lfs:size '
                 f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg '
@@ -99,13 +96,13 @@ CODES_CONFIG = {
         "make_parameters": ["run"]
     },
     MNIST: {
-        "path": f"{SETUP_PATH}/{MNIST}",
+        "path": f"{BENCHMARKS_DIR}/{MNIST}",
         "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
                 f'--target=gap9.evk '
                 f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
                 f'--platform=board '
-                f'--work-dir={SETUP_PATH}/{MNIST}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
-                f'--binary={SETUP_PATH}/{MNIST}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{MNIST} '
+                f'--work-dir={BENCHMARKS_DIR}/{MNIST}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
+                f'--binary={BENCHMARKS_DIR}/{MNIST}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{MNIST} '
                 f'--config-opt=**/runner/boot/mode=jtag    '
                 f'--flash-property=0@flash:lfs:size '
                 f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg '
@@ -117,13 +114,13 @@ CODES_CONFIG = {
     },
 
     BILINEAR_RESIZE: {
-        "path": f"{SETUP_PATH}/{BILINEAR_RESIZE}",
+        "path": f"{BENCHMARKS_DIR}/{BILINEAR_RESIZE}",
         "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
                 f'--target=gap9.evk '
                 f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
                 f'--platform=board '
-                f'--work-dir={SETUP_PATH}/{BILINEAR_RESIZE}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
-                f'--binary={SETUP_PATH}/{BILINEAR_RESIZE}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/Bilinear_Resize '
+                f'--work-dir={BENCHMARKS_DIR}/{BILINEAR_RESIZE}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
+                f'--binary={BENCHMARKS_DIR}/{BILINEAR_RESIZE}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/Bilinear_Resize '
                 f'--config-opt=**/runner/boot/mode=jtag    '
                 f'--flash-property=0@flash:lfs:size '
                 f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg '
@@ -133,23 +130,23 @@ CODES_CONFIG = {
         "timeout": GENERAL_TIMEOUT,
         "make_parameters": ["run"]
     },
-
-    CNN_OP: {
-        "path": f"{SETUP_PATH}/{CNN_OP}",
+    CNN_OP: {},
+    MEM_TEST: {
+        "path": f"{BENCHMARKS_DIR}/{MEM_TEST}",
         "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
                 f'--target=gap9.evk '
                 f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
                 f'--platform=board '
-                f'--work-dir={SETUP_PATH}/{CNN_OP}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
-                f'--binary={SETUP_PATH}/{CNN_OP}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/cnnOps '
+                f'--work-dir={BENCHMARKS_DIR}/{MEM_TEST}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
+                f'--binary={BENCHMARKS_DIR}/{MEM_TEST}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{MEM_TEST} '
                 f'--config-opt=**/runner/boot/mode=jtag    '
                 f'--flash-property=0@flash:lfs:size '
-                f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg'
-                f' --openocd-script={GAP_SDK_DIR}/utils/openocd_tools/tcl/gap9revb.tcl '
+                f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg '
+                f'--openocd-script={GAP_SDK_DIR}/utils/openocd_tools/tcl/gap9revb.tcl '
                 f'--openocd-tools={GAP_SDK_DIR}/utils/openocd_tools '
                 f'--flash-property={GAP_SDK_DIR}/utils/ssbl/bin/ssbl-gap9_evk@mram:rom:binary run',
-        "timeout": 500,
-        "make_parameters": []
+        "timeout": GENERAL_TIMEOUT,
+        "make_parameters": ["run"]
     },
     #
     # MEM_TEST: {
@@ -183,11 +180,13 @@ CODES_CONFIG = {
 
 VFS_PERFORMANCE = "performance"
 VFS_ENERGY = "energy"
+VFS_EXTREME = "extreme"
 VFS_MIDDLE = "middle"
 
 # TODO: check if this make sense
 VFS_CONFIGURATIONS = {
     VFS_PERFORMANCE: dict(RAD_FREQ_SET_FC=370, RAD_FREQ_SET_CL=370, RAD_VOLT_SET=800),
+    VFS_EXTREME: dict(RAD_FREQ_SET_FC=370, RAD_FREQ_SET_CL=370, RAD_VOLT_SET=650),
     VFS_MIDDLE: dict(RAD_FREQ_SET_FC=300, RAD_FREQ_SET_CL=300, RAD_VOLT_SET=650),
     VFS_ENERGY: dict(RAD_FREQ_SET_FC=240, RAD_FREQ_SET_CL=240, RAD_VOLT_SET=650),
 }

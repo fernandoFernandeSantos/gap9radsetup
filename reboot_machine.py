@@ -51,7 +51,7 @@ except OSError:
 
 
 def _execute_command(cmd: str) -> ErrorCodes:
-    """ Simple function to execute a shell command
+    """ Simple function to execute a shell cmd
     :param cmd: command string
     :return: ErrorCodes enum
     """
