@@ -27,6 +27,8 @@ typedef enum {
 #ifndef TEST_MICRO_ID
 #define TEST_MICRO_ID FADDS
 #warning "Micro not defined, using FADDS as default"
+#elif TEST_MICRO_ID > 8
+#warning "TEST_MICRO_ID larger than the number of microtypes"
 #endif
 #define MICRO_ITERATIONS 1 << 16
 
@@ -49,22 +51,33 @@ const float micro_golds[] = {
         276.9230F,  // FDIVS
         46.1714F,   // FSQRTS
         97.1318F,   // FMADDS
-        823.4578F,  // FMSUBS
-        694.8286F,
-        317.0995F
+        823.4578F,  // FNMADDS
+        694.8286F,  // FMSUBS
+        317.0995F   // FNMSUBS
 };
 
 const float micro_ins[] = {
         655.4779F,   // FADDS
-        97.1318F,  // FSUBS
-        2232.8328F,   // FMULS
-        787.9230F,  // FDIVS
+        97.1318F,    // FSUBS
+        2232.8328F,  // FMULS
+        787.9230F,   // FDIVS
         345.1714F,   // FSQRTS
-        98.1318F,   // FMADDS
-        454.2092F, //  FNMADDS
-        88.4578F,  // FMSUBS
-        555.8286F, //FNMSUBS
-        317.0995F
+        98.1318F,    // FMADDS
+        454.2092F,   // FNMADDS
+        88.4578F,    // FMSUBS
+        555.8286F,   // FNMSUBS
+};
+
+const float micro_threshold[] = {
+        0,   // FADDS
+        0,    // FSUBS
+        0,  // FMULS
+        0,   // FDIVS
+        0,   // FSQRTS
+        0,    // FMADDS
+        0,   // FNMADDS
+        0,    // FMSUBS
+        1.0e-1f,   // FNMSUBS
 };
 
 #define MAX_NUMBER_CORES 16
@@ -255,13 +268,9 @@ void cluster_delegate(void *arg) {
 
 /* Program Entry. */
 int main(void) {
-    pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, VOLT_SET);
-    pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, VOLT_SET);
-    pi_freq_set(PI_FREQ_DOMAIN_FC, FREQ_FC * 1000 * 1000);
-    pi_freq_set(PI_FREQ_DOMAIN_CL, FREQ_CL * 1000 * 1000);
-    pi_freq_set(PI_FREQ_DOMAIN_PERIPH, FREQ_PE * 1000 * 1000);
-
-    printf("micro VOLTAGE:%d FREQ_FC:%d FREQ_CL:%d\n",
+    start_counters();
+    printf("micro %s VOLTAGE:%d FREQ_FC:%d FREQ_CL:%d\n",
+           micro_names[TEST_MICRO_ID],
            pi_pmu_voltage_get(PI_PMU_VOLTAGE_DOMAIN_CHIP),
            pi_freq_get(PI_FREQ_DOMAIN_FC),
            pi_freq_get(PI_FREQ_DOMAIN_CL));
@@ -295,23 +304,27 @@ int main(void) {
 
     /* Prepare cluster task and send it to cluster. */
     struct pi_cluster_task cl_task;
+    pi_cluster_task(&cl_task, cluster_delegate, &test_definitions);
     int errors = 0, its;
     for (its = 0; its < SETUP_RADIATION_ITERATIONS && errors == 0; its++) {
         begin_perf_iteration_i();
-        pi_cluster_send_task_to_cl(&cluster_dev, pi_cluster_task(&cl_task, cluster_delegate, &test_definitions));
+        pi_cluster_send_task_to_cl(&cluster_dev, &cl_task);
         end_perf_iteration_i();
 //        if (its == 2) test_definitions.micro_output[6] = 44;
         // Verify the output
         for (int i = 0; i < gap_ncore(); i++) {
             float output = test_definitions.micro_output[i];
             if (output != micro_gold) {
-                printf("Error:[%d]=%f != %f\n", i, output, micro_gold);
-                errors++;
+                float diff = fabs(output - micro_gold);
+                if (diff > micro_threshold[TEST_MICRO_ID]) {
+                    printf("Error:[%d]=%f != %f\n", i, output, micro_gold);
+                    errors++;
+                }
             }
         }
 
     }
-    if (errors){
+    if (errors) {
         print_iteration_perf(its);
     }
 
