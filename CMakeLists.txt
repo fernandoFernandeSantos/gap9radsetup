@@ -65,4 +65,6 @@ add_executable(
         benchmarks/Mnist/Mnist.c
         benchmarks/MatrixAdd/MatAdd.c
 
-        benchmarks/testFPU/testFPU.c benchmarks/testFPU/math_fns.c benchmarks/testFPU/main.c)
+        benchmarks/testFPU/main.c
+        benchmarks/memradtest/memradtest.c
+)

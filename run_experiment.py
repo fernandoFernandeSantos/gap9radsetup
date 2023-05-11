@@ -32,17 +32,17 @@ MEMORIES_TO_TEST = {
 }
 
 CNN_OPS_TO_TEST = dict(
-    RAD_SEQUENTIAL_MAX_POOL=0,
-    RAD_SEQUENTIAL_AVG_MAX_POOL=1,
-    RAD_SEQUENTIAL_CONV=2,
-    RAD_SEQUENTIAL_LINEAR=3,
-    RAD_PARALLEL_VECT_MAX_POOL=14,
-    RAD_PARALLEL_VECT_AVG_MAX_POOL=15,
-    RAD_PARALLEL_VECT_CONV=16,
-    RAD_PARALLEL_VECT_LINEAR=17,
+    SEQUENTIAL_MAX_POOL=0,
+    SEQUENTIAL_AVG_MAX_POOL=1,
+    SEQUENTIAL_CONV=2,
+    SEQUENTIAL_LINEAR=3,
+    PARALLEL_VECT_MAX_POOL=14,
+    PARALLEL_VECT_AVG_MAX_POOL=15,
+    PARALLEL_VECT_CONV=16,
+    PARALLEL_VECT_LINEAR=17,
 )
 
-CNN_OPS_TO_TEST = {k: f"RAD_CNN_OP={v}" for k, v in CNN_OPS_TO_TEST.items()}
+CNN_OPS_TO_TEST = {k: f"CNN_OP={v}" for k, v in CNN_OPS_TO_TEST.items()}
 
 AFTER_REBOOT_SLEEPING_TIME = 60
 GENERAL_TIMEOUT = 50
@@ -185,10 +185,10 @@ VFS_MIDDLE = "middle"
 
 # TODO: check if this make sense
 VFS_CONFIGURATIONS = {
-    VFS_PERFORMANCE: dict(RAD_FREQ_SET_FC=370, RAD_FREQ_SET_CL=370, RAD_VOLT_SET=800),
-    VFS_EXTREME: dict(RAD_FREQ_SET_FC=370, RAD_FREQ_SET_CL=370, RAD_VOLT_SET=650),
-    VFS_MIDDLE: dict(RAD_FREQ_SET_FC=300, RAD_FREQ_SET_CL=300, RAD_VOLT_SET=650),
-    VFS_ENERGY: dict(RAD_FREQ_SET_FC=240, RAD_FREQ_SET_CL=240, RAD_VOLT_SET=650),
+    VFS_PERFORMANCE: dict(FREQ_SET_FC=370, FREQ_SET_CL=370, VOLT_SET=800),
+    VFS_EXTREME: dict(FREQ_SET_FC=370, FREQ_SET_CL=370, VOLT_SET=650),
+    VFS_MIDDLE: dict(FREQ_SET_FC=300, FREQ_SET_CL=300, VOLT_SET=650),
+    VFS_ENERGY: dict(FREQ_SET_FC=240, FREQ_SET_CL=240, VOLT_SET=650),
 }
 
 KILL_PROGRAM_LIST = ["gapy", "openocd"]
@@ -371,11 +371,11 @@ def main():
         make_parameters = [CNN_OPS_TO_TEST[args.cnnop]]
 
     make_parameters += [f"{k}={v}" for k, v in VFS_CONFIGURATIONS[args.vfsprof].items()]
-    # RAD_FREQ_SET_FC=175 * 1000000, RAD_FREQ_SET_CL=250 * 1000000, RAD_VOLT_SET=1200
-    make_parameters += [f"FREQ_CL={VFS_CONFIGURATIONS[args.vfsprof]['RAD_FREQ_SET_CL']}",
-                        f"FREQ_FC={VFS_CONFIGURATIONS[args.vfsprof]['RAD_FREQ_SET_FC']}",
-                        f"FREQ_PE={VFS_CONFIGURATIONS[args.vfsprof]['RAD_FREQ_SET_FC']}",
-                        f"VOLTAGE={VFS_CONFIGURATIONS[args.vfsprof]['RAD_VOLT_SET']}"]
+    # FREQ_SET_FC=175 * 1000000, FREQ_SET_CL=250 * 1000000, VOLT_SET=1200
+    make_parameters += [f"FREQ_CL={VFS_CONFIGURATIONS[args.vfsprof]['FREQ_SET_CL']}",
+                        f"FREQ_FC={VFS_CONFIGURATIONS[args.vfsprof]['FREQ_SET_FC']}",
+                        f"FREQ_PE={VFS_CONFIGURATIONS[args.vfsprof]['FREQ_SET_FC']}",
+                        f"VOLTAGE={VFS_CONFIGURATIONS[args.vfsprof]['VOLT_SET']}"]
     make_parameters += CODES_CONFIG[args.benchmark]["make_parameters"]
 
     reboot_disable = args.noreboot is False

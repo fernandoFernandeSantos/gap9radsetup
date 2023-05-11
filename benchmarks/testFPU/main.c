@@ -8,23 +8,10 @@
 
 /* PMSIS includes */
 #include "pmsis.h"
+#include "../perf/performance_counter.h"
 
 // This testbench checks the basic functionality of:
-//
-// fadd.s
-// fsub.s
-// fmul.s
-// fdiv.s
-// fsqrt.s
-// fmadd.s
-// fnmadd.s
-// fmsub.s
-// fnmsub.s
-// fLog2
-// fExp2
-// fSin
-// fCos
-// fAtan2
+//fadd.s, fsub.s, fmul.s, fdiv.s, fsqrt.s, fmadd.s, fnmadd.s, fmsub.s, fnmsub.s, fLog2, fAtan2
 typedef enum {
     FADDS = 0,
     FSUBS,
@@ -32,10 +19,30 @@ typedef enum {
     FDIVS,
     FSQRTS,
     FMADDS,
-    FMSUBS
+    FNMADDS,
+    FMSUBS,
+    FNMSUBS,
 } MicroTypes;
 
-float micro_golds[] = {
+#ifndef TEST_MICRO_ID
+#define TEST_MICRO_ID FADDS
+#warning "Micro not defined, using FADDS as default"
+#endif
+#define MICRO_ITERATIONS 1 << 16
+
+const char *micro_names[] = {
+        "FADDS",
+        "FSUBS",
+        "FMULS",
+        "FDIVS",
+        "FSQRTS",
+        "FMADDS",
+        "FNMADDS",
+        "FMSUBS",
+        "FNMSUBS",
+};
+
+const float micro_golds[] = {
         97.1318F,   // FADDS
         171.1867F,  // FSUBS
         31.8328F,   // FMULS
@@ -47,9 +54,23 @@ float micro_golds[] = {
         317.0995F
 };
 
+const float micro_ins[] = {
+        655.4779F,   // FADDS
+        97.1318F,  // FSUBS
+        2232.8328F,   // FMULS
+        787.9230F,  // FDIVS
+        345.1714F,   // FSQRTS
+        98.1318F,   // FMADDS
+        454.2092F, //  FNMADDS
+        88.4578F,  // FMSUBS
+        555.8286F, //FNMSUBS
+        317.0995F
+};
+
+#define MAX_NUMBER_CORES 16
 typedef struct {
     MicroTypes micro_t;
-
+    float micro_output[MAX_NUMBER_CORES]; // not more than 16 cores
 } MicroBenchDescriptor;
 
 inline float fadd(float a, float b) {
@@ -82,21 +103,44 @@ inline float fsqrt(float a) {
     return c;
 }
 
+inline float fmadds(float a, float b, float d) {
+    float c = 0;
+    asm volatile ("fmadd.s %[c], %[a], %[b], %[d]\n" : [c] "=f"(c) : [a] "f"(a), [b] "f"(b), [d] "f"(d));
+    return c;
+}
 
-void execute_micro(MicroTypes micro_t, uint32_t core_id) {
-    const int micro_iterations = 1 << 22;
+inline float fnmadds(float a, float b, float d) {
+    float c = 0;
+    asm volatile ("fnmadd.s %[c], %[a], %[b], %[d]\n" : [c] "=f"(c) : [a] "f"(a), [b] "f"(b), [d] "f"(d));
+    return c;
+}
+
+inline float fmsubs(float a, float b, float d) {
+    float c = 0;
+    asm volatile ("fmsub.s %[c], %[a], %[b], %[d]\n"  : [c] "=f"(c) : [a] "f"(a), [b] "f"(b), [d] "f"(d));
+    return c;
+}
+
+inline float fnmsubs(float a, float b, float d) {
+    float c = 0;
+    asm volatile("fnmsub.s %[c], %[a], %[b], %[d]\n" : [c] "=f"(c) : [a] "f"(a), [b] "f"(b), [d] "f"(d));
+    return c;
+}
+
+
+void execute_micro(MicroTypes micro_t, uint32_t core_id, float *micro_out) {
     float acc = micro_golds[micro_t];
+    float a = micro_ins[micro_t];
+    float b = -a;
 
     switch (micro_t) {
         case FADDS: {
             //-----------------------------------------------------------------
             // Check fadd.s (floating point addition)
             //-----------------------------------------------------------------
-            float add_a = 655.4779F;
-            float add_inv = -add_a;
-            for (int i = 0; i < micro_iterations; i++) {
-                acc = fadd(acc, add_inv);
-                acc = fadd(acc, add_a);
+            for (int i = 0; i < MICRO_ITERATIONS; i++) {
+                acc = fadd(acc, b);
+                acc = fadd(acc, a);
             }
         }
             break;
@@ -104,11 +148,9 @@ void execute_micro(MicroTypes micro_t, uint32_t core_id) {
             //-----------------------------------------------------------------
             // Check fsub.s (floating point subtraction)
             //-----------------------------------------------------------------
-            float sub_a = 97.1318F;
-            float sub_inv = -sub_a;
-            for (int i = 0; i < micro_iterations; i++) {
-                acc = fsub(acc, sub_a);
-                acc = fsub(acc, sub_inv);
+            for (int i = 0; i < MICRO_ITERATIONS; i++) {
+                acc = fsub(acc, a);
+                acc = fsub(acc, b);
             }
         }
             break;
@@ -116,23 +158,21 @@ void execute_micro(MicroTypes micro_t, uint32_t core_id) {
             //-----------------------------------------------------------------
             // Check fmul.s (floating point multiplication)
             //-----------------------------------------------------------------
-            float mul_a = 46.1714F;
-            float mul_inv = 1 / mul_a;
-            for (int i = 0; i < micro_iterations; i++) {
-                acc = fmul(acc, mul_a);
+            float mul_inv = 1 / a;
+            for (int i = 0; i < MICRO_ITERATIONS; i++) {
+                acc = fmul(acc, a);
                 acc = fmul(acc, mul_inv);
             }
         }
             break;
         case FDIVS: {
-            float div_a = 694.8286F;
-            float div_a_inv = 1 / div_a;
+            float div_a_inv = 1 / a;
             //-----------------------------------------------------------------
             // Check fdiv.s (floating point division)
             //-----------------------------------------------------------------
-            for (int i = 0; i < micro_iterations; i++) {
+            for (int i = 0; i < MICRO_ITERATIONS; i++) {
                 acc = fdiv(acc, div_a_inv);
-                acc = fdiv(acc, div_a);
+                acc = fdiv(acc, a);
             }
         }
             break;
@@ -140,144 +180,60 @@ void execute_micro(MicroTypes micro_t, uint32_t core_id) {
             //-----------------------------------------------------------------
             // Check fsqrt.s (floating point square root)
             //-----------------------------------------------------------------
-            for (int i = 0; i < micro_iterations; i++) {
+            for (int i = 0; i < MICRO_ITERATIONS; i++) {
                 acc = fsqrt(acc);
                 acc *= acc;
             }
         }
             break;
-        case FMADDS:
-        case FMSUBS:
+        case FMADDS: {
+            //-----------------------------------------------------------------
+            // Check fmadd.s (floating point multiply-add)
+            //-----------------------------------------------------------------
+            for (int i = 0; i < MICRO_ITERATIONS; i++) {
+                acc = fmadds(a, b, acc);
+                acc = fmadds(b, a, acc);
+            }
+        }
             break;
+        case FNMADDS: {
+            //-----------------------------------------------------------------
+            // Check fnmadd.s (floating point negative multiply-add)
+            //-----------------------------------------------------------------
+            for (int i = 0; i < MICRO_ITERATIONS; i++) {
+                acc = fnmadds(a, a, acc);
+                acc = fnmadds(b, a, acc);
+            }
+        }
+        case FMSUBS: {
+            //-----------------------------------------------------------------
+            // Check fmsub.s (floating point multiply-subtract)
+            //-----------------------------------------------------------------
+            for (int i = 0; i < MICRO_ITERATIONS; i++) {
+                acc = fmsubs(a, a, acc);
+                acc = fmsubs(b, a, acc);
+            }
+        }
+            break;
+        case FNMSUBS: {
+            //-----------------------------------------------------------------
+            // Check fnmsub.s (floating point negative multiply-subtract)
+            //-----------------------------------------------------------------
+            for (int i = 0; i < MICRO_ITERATIONS; i++) {
+                acc = fnmsubs(a, a, acc);
+                acc = fnmsubs(b, a, acc);
+            }
+        }
+            break;
+            /**
+             * Why not other functions
+             * fExp2, fLog2,  fsin, is approximated
+             */
     }
 //    printf("PASSOU AQUI %d core id %d\n", micro_t, core_id);
-    printf("%d - Result fadd: %f core: %d\n", micro_iterations, acc, core_id);
-
+//    printf("%d - Result fadd: %f core: %d\n", MICRO_ITERATIONS, acc, core_id);
+    *micro_out = acc;
 }
-
-/**
- *
-void check_explog(testresult_t *result, void (*start)(), void (*stop)()) {
-    unsigned int i;
-    float g_add_act[sizeof(g_in_a) / 4];
-    //-----------------------------------------------------------------
-    // Check fExp2 (floating point exponentiation 2^x)
-    //-----------------------------------------------------------------
-    start();
-    for (i = 0; i < (sizeof(g_add_act) / 4); i++) {
-        float g_exp_in = g_in_a[i] / 100.0F;
-        g_add_act[i] = fExp2(g_exp_in);
-
-        check_float(result, "fExp2", g_add_act[i], g_exp_min[i], g_exp_max[i]);
-    }
-
-    //-----------------------------------------------------------------
-    // Check fExp2 (floating point exponentiation 2^(-x))
-    //-----------------------------------------------------------------
-    for (i = 0; i < (sizeof(g_add_act) / 4); i++) {
-        float g_exp_in = g_in_a[i] / 1000.0F;
-        g_add_act[i] = fExp2(-g_exp_in);
-
-        check_float(result, "fExp2", g_add_act[i], g_mexp_min[i], g_mexp_max[i]);
-    }
-
-    //-----------------------------------------------------------------
-    // Check fLog2 (floating point logarithm (base 2))
-    //-----------------------------------------------------------------
-    for (i = 0; i < (sizeof(g_add_act) / 4); i++) {
-        g_add_act[i] = fLog2(g_in_a[i]);
-        check_float(result, "gLog2", g_add_act[i], g_log_min[i], g_log_max[i]);
-    }
-    stop();
-}
-
-void check_trig(testresult_t *result, void (*start)(), void (*stop)()) {
-    unsigned int i;
-    float g_trig_act[sizeof(g_trig_in) / 4];
-    start();
-    float pi2 = MATH_0_5PI;
-    //-----------------------------------------------------------------
-    // Check fSin (floating point sin)
-    //-----------------------------------------------------------------
-    for (i = 0; i < (sizeof(g_trig_act) / 4); i++) {
-        g_trig_act[i] = fSin(g_trig_in[i]);
-        check_float(result, "fSin", g_trig_act[i], g_sin_min[i], g_sin_max[i]);
-    }
-    //-----------------------------------------------------------------
-    // Check fCos (floating point cos)
-    //-----------------------------------------------------------------
-    for (i = 0; i < (sizeof(g_trig_act) / 4); i++) {
-        g_trig_act[i] = fCos(g_trig_in[i]);
-        check_float(result, "fCos", g_trig_act[i], g_cos_min[i], g_cos_max[i]);
-    }
-    //-----------------------------------------------------------------
-    // Check fAtan2 (floating point atan) // atan2(y,x); y=a, x=b
-    //-----------------------------------------------------------------
-    for (i = 0; i < (sizeof(g_trig_act) / 4); i++) {
-        float x, y;
-        x = g_in_b[i];
-        y = g_in_a[i];
-        g_trig_act[i] = fAtan2(y, x);
-        check_float(result, "fAtan2", g_trig_act[i], g_atan_min[i], g_atan_max[i]);
-    }
-    stop();
-}
-
-void check_fma(testresult_t *result, void (*start)(), void (*stop)()) {
-    unsigned int i;
-    start();
-    float g_fma_act[(sizeof(g_fma_init) / 4)];
-
-    //-----------------------------------------------------------------
-    // Check fmadd.s (floating point multiply-add)
-    //-----------------------------------------------------------------
-    for (i = 0; i < (sizeof(g_fma_init) / 4); i++) {
-        g_fma_act[i] = g_fma_init[i];
-        asm volatile ("fmadd.s %[c], %[a], %[b], %[d]\n"
-                : [c] "=f"(g_fma_act[i])
-        : [a] "f"(g_in_a[i]), [b] "f"(g_in_b[i]), [d] "f"(g_fma_act[i]));
-
-        check_float(result, "fmadd.s", g_fma_act[i], g_fma_min[i], g_fma_max[i]);
-    }
-    //-----------------------------------------------------------------
-    // Check fnmadd.s (floating point negative multiply-add)
-    //-----------------------------------------------------------------
-    for (i = 0; i < (sizeof(g_fma_init) / 4); i++) {
-        g_fma_act[i] = g_fma_init[i];
-        asm volatile ("fnmadd.s %[c], %[a], %[b], %[d]\n"
-                : [c] "=f"(g_fma_act[i])
-        : [a] "f"(g_in_a[i]), [b] "f"(g_in_b[i]), [d] "f"(g_fma_act[i]));
-
-        check_float(result, "fnmadd.s", g_fma_act[i], -g_fma_max[i], -g_fma_min[i]);
-    }
-
-    //-----------------------------------------------------------------
-    // Check fmsub.s (floating point multiply-subtract)
-    //-----------------------------------------------------------------
-    for (i = 0; i < (sizeof(g_fma_init) / 4); i++) {
-        g_fma_act[i] = g_fma_init[i];
-        asm volatile ("fmsub.s %[c], %[a], %[b], %[d]\n"
-                : [c] "=f"(g_fma_act[i])
-        : [a] "f"(g_in_a[i]), [b] "f"(-g_in_b[i]), [d] "f"(-g_fma_act[i]));
-
-        check_float(result, "fmsub.s", g_fma_act[i], g_fms_min[i], g_fms_max[i]);
-    }
-    //-----------------------------------------------------------------
-    // Check fnmsub.s (floating point negative multiply-subtract)
-    //-----------------------------------------------------------------
-    for (i = 0; i < (sizeof(g_fma_init) / 4); i++) {
-        g_fma_act[i] = g_fma_init[i];
-        asm volatile("fnmsub.s %[c], %[a], %[b], %[d]\n"
-                : [c] "=f"(g_fma_act[i])
-        : [a] "f"(g_in_a[i]), [b] "f"(-g_in_b[i]), [d] "f"(-g_fma_act[i]));
-
-        check_float(result, "fnmsub.s", g_fma_act[i], -g_fms_max[i], -g_fms_min[i]);
-    }
-
-
-    stop();
-}
- */
 
 
 /* Task executed by cluster cores. */
@@ -285,7 +241,8 @@ void cluster_call_micro(void *arg) {
     uint32_t core_id = pi_core_id(), cluster_id = pi_cluster_id();
 //    printf("[%d %d] Hellosfsdf World!\n", cluster_id, core_id);
     MicroBenchDescriptor *micro_details = (MicroBenchDescriptor *) arg;
-    execute_micro(micro_details->micro_t, core_id);
+    float *micro_output = &micro_details->micro_output[core_id];
+    execute_micro(micro_details->micro_t, core_id, micro_output);
 }
 
 /* Cluster main entry, executed by core 0. */
@@ -298,11 +255,21 @@ void cluster_delegate(void *arg) {
 
 /* Program Entry. */
 int main(void) {
+    pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, VOLT_SET);
+    pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, VOLT_SET);
+    pi_freq_set(PI_FREQ_DOMAIN_FC, FREQ_FC * 1000 * 1000);
+    pi_freq_set(PI_FREQ_DOMAIN_CL, FREQ_CL * 1000 * 1000);
+    pi_freq_set(PI_FREQ_DOMAIN_PERIPH, FREQ_PE * 1000 * 1000);
+
+    printf("micro VOLTAGE:%d FREQ_FC:%d FREQ_CL:%d\n",
+           pi_pmu_voltage_get(PI_PMU_VOLTAGE_DOMAIN_CHIP),
+           pi_freq_get(PI_FREQ_DOMAIN_FC),
+           pi_freq_get(PI_FREQ_DOMAIN_CL));
 //    printf("\n\n\t *** PMSIS HelloWorld ***\n\n");
 //    printf("Entering main controller\n");
-    MicroBenchDescriptor test_definitions = {FSQRTS};
+    MicroBenchDescriptor test_definitions = {TEST_MICRO_ID, {0}};
+    float micro_gold = micro_golds[TEST_MICRO_ID];
 
-    int32_t errors = 0;
     uint32_t core_id = pi_core_id(), cluster_id = pi_cluster_id();
 //    printf("[%d %d] Hello World!\n", cluster_id, core_id);
 
@@ -328,12 +295,28 @@ int main(void) {
 
     /* Prepare cluster task and send it to cluster. */
     struct pi_cluster_task cl_task;
+    int errors = 0, its;
+    for (its = 0; its < SETUP_RADIATION_ITERATIONS && errors == 0; its++) {
+        begin_perf_iteration_i();
+        pi_cluster_send_task_to_cl(&cluster_dev, pi_cluster_task(&cl_task, cluster_delegate, &test_definitions));
+        end_perf_iteration_i();
+//        if (its == 2) test_definitions.micro_output[6] = 44;
+        // Verify the output
+        for (int i = 0; i < gap_ncore(); i++) {
+            float output = test_definitions.micro_output[i];
+            if (output != micro_gold) {
+                printf("Error:[%d]=%f != %f\n", i, output, micro_gold);
+                errors++;
+            }
+        }
 
-    pi_cluster_send_task_to_cl(&cluster_dev, pi_cluster_task(&cl_task, cluster_delegate, &test_definitions));
+    }
+    if (errors){
+        print_iteration_perf(its);
+    }
 
+    end_counters();
+    printf("Test finished\n");
     pi_cluster_close(&cluster_dev);
-
-    printf("Bye !\n");
-
     return errors;
 }

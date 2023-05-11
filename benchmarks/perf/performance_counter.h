@@ -6,8 +6,9 @@
 #define GAP_SDK_BEAM_PERFORMANCE_COUNTER_H
 
 #define PROFILE_APP 1
-#define SETUP_RADIATION_ITERATIONS 1024
+#define SETUP_RADIATION_ITERATIONS 256
 
+#define gap_ncore() __builtin_pulp_CoreCount()
 
 typedef struct {
     uint32_t perf_cycles;
