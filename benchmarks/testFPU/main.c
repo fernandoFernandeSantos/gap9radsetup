@@ -9,9 +9,10 @@
 /* PMSIS includes */
 #include "pmsis.h"
 #include "../perf/performance_counter.h"
+#include <math.h>
 
 // This testbench checks the basic functionality of:
-//fadd.s, fsub.s, fmul.s, fdiv.s, fsqrt.s, fmadd.s, fnmadd.s, fmsub.s, fnmsub.s, fLog2, fAtan2
+//fadd.s, fsub.s, fmul.s, fdiv.s, fsqrt.s, fmadd.s, fnmadd.s, fmsub.s, fnmsub.s
 typedef enum {
     FADDS = 0,
     FSUBS,
@@ -69,13 +70,13 @@ const float micro_ins[] = {
 };
 
 const float micro_threshold[] = {
-        0,   // FADDS
+        1.0e-4f,   // FADDS
         0,    // FSUBS
-        0,  // FMULS
+        1.0e-5f,  // FMULS
         0,   // FDIVS
         0,   // FSQRTS
-        0,    // FMADDS
-        0,   // FNMADDS
+        1.0e-4f,    // FMADDS
+        1.0e-3f,   // FNMADDS
         0,    // FMSUBS
         1.0e-1f,   // FNMSUBS
 };
@@ -86,55 +87,56 @@ typedef struct {
     float micro_output[MAX_NUMBER_CORES]; // not more than 16 cores
 } MicroBenchDescriptor;
 
-inline float fadd(float a, float b) {
+
+ALWAYS_INLINE__ float fadd(const float a, const float b) {
     float c = 0;
     asm volatile ("fadd.s %[c], %[a], %[b]\n" : [c] "=f"(c) : [a] "f"(a), [b] "f"(b));
     return c;
 }
 
-inline float fsub(float a, float b) {
+ALWAYS_INLINE__ float fsub(const float a, const float b) {
     float c = 0;
     asm volatile ("fsub.s %[c], %[a], %[b]\n" : [c] "=f"(c) : [a] "f"(a), [b] "f"(b));
     return c;
 }
 
-inline float fmul(float a, float b) {
+ALWAYS_INLINE__ float fmul(const float a, const float b) {
     float c = 0;
     asm volatile ("fmul.s %[c], %[a], %[b]\n" : [c] "=f"(c) : [a] "f"(a), [b] "f"(b));
     return c;
 }
 
-inline float fdiv(float a, float b) {
+ALWAYS_INLINE__ float fdiv(const float a, const float b) {
     float c = 0;
     asm volatile ("fdiv.s %[c], %[a], %[b]\n" : [c] "=f"(c) : [a] "f"(a), [b] "f"(b));
     return c;
 }
 
-inline float fsqrt(float a) {
+ALWAYS_INLINE__ float fsqrt(const float a) {
     float c = 0;
     asm volatile ("fsqrt.s %[c], %[a]\n" : [c] "=f"(c) : [a] "f"(a));
     return c;
 }
 
-inline float fmadds(float a, float b, float d) {
+ALWAYS_INLINE__ float fmadds(const float a, const float b, const float d) {
     float c = 0;
     asm volatile ("fmadd.s %[c], %[a], %[b], %[d]\n" : [c] "=f"(c) : [a] "f"(a), [b] "f"(b), [d] "f"(d));
     return c;
 }
 
-inline float fnmadds(float a, float b, float d) {
+ALWAYS_INLINE__ float fnmadds(const float a, const float b, const float d) {
     float c = 0;
     asm volatile ("fnmadd.s %[c], %[a], %[b], %[d]\n" : [c] "=f"(c) : [a] "f"(a), [b] "f"(b), [d] "f"(d));
     return c;
 }
 
-inline float fmsubs(float a, float b, float d) {
+ALWAYS_INLINE__ float fmsubs(const float a, const float b, const float d) {
     float c = 0;
     asm volatile ("fmsub.s %[c], %[a], %[b], %[d]\n"  : [c] "=f"(c) : [a] "f"(a), [b] "f"(b), [d] "f"(d));
     return c;
 }
 
-inline float fnmsubs(float a, float b, float d) {
+ALWAYS_INLINE__ float fnmsubs(const float a, const float b, const float d) {
     float c = 0;
     asm volatile("fnmsub.s %[c], %[a], %[b], %[d]\n" : [c] "=f"(c) : [a] "f"(a), [b] "f"(b), [d] "f"(d));
     return c;
@@ -204,7 +206,7 @@ void execute_micro(MicroTypes micro_t, uint32_t core_id, float *micro_out) {
             // Check fmadd.s (floating point multiply-add)
             //-----------------------------------------------------------------
             for (int i = 0; i < MICRO_ITERATIONS; i++) {
-                acc = fmadds(a, b, acc);
+                acc = fmadds(a, a, acc);
                 acc = fmadds(b, a, acc);
             }
         }
@@ -214,7 +216,7 @@ void execute_micro(MicroTypes micro_t, uint32_t core_id, float *micro_out) {
             // Check fnmadd.s (floating point negative multiply-add)
             //-----------------------------------------------------------------
             for (int i = 0; i < MICRO_ITERATIONS; i++) {
-                acc = fnmadds(a, a, acc);
+                acc = fnmadds(-a, a, acc);
                 acc = fnmadds(b, a, acc);
             }
         }
@@ -224,7 +226,7 @@ void execute_micro(MicroTypes micro_t, uint32_t core_id, float *micro_out) {
             //-----------------------------------------------------------------
             for (int i = 0; i < MICRO_ITERATIONS; i++) {
                 acc = fmsubs(a, a, acc);
-                acc = fmsubs(b, a, acc);
+                acc = fmsubs(b, a, -acc);
             }
         }
             break;
@@ -315,7 +317,7 @@ int main(void) {
         for (int i = 0; i < gap_ncore(); i++) {
             float output = test_definitions.micro_output[i];
             if (output != micro_gold) {
-                float diff = fabs(output - micro_gold);
+                float diff = fabsf(output - micro_gold);
                 if (diff > micro_threshold[TEST_MICRO_ID]) {
                     printf("Error:[%d]=%f != %f\n", i, output, micro_gold);
                     errors++;

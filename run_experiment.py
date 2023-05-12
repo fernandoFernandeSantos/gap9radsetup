@@ -31,6 +31,9 @@ MEMORIES_TO_TEST = {
     "L2": "-DMEM_LEVEL=2"
 }
 
+# FPU microbenchmarks
+FPU_MICROBENCHMARKS = "testFPU"
+
 CNN_OPS_TO_TEST = dict(
     SEQUENTIAL_MAX_POOL=0,
     SEQUENTIAL_AVG_MAX_POOL=1,
@@ -44,13 +47,28 @@ CNN_OPS_TO_TEST = dict(
 
 CNN_OPS_TO_TEST = {k: f"CNN_OP={v}" for k, v in CNN_OPS_TO_TEST.items()}
 
+FPU_MICRO_TO_TEST = dict(
+    FADDS=0,
+    FSUBS=1,
+    FMULS=2,
+    FDIVS=3,
+    FSQRTS=4,
+    FMADDS=5,
+    FNMADDS=6,
+    FMSUBS=7,
+    FNMSUBS=8,
+)
+
+FPU_MICRO_TO_TEST = {k: f"TEST_MICRO_ID={v}" for k, v in FPU_MICRO_TO_TEST.items()}
+
+
 AFTER_REBOOT_SLEEPING_TIME = 60
 GENERAL_TIMEOUT = 50
 MAX_SEQUENTIALLY_ERRORS = 10
 SLEEP_AFTER_MULTIPLE_ERRORS = 120
 
 try:
-    GAP_SDK_DIR = os.environ["GAP_SDK_DIR_RAD"]
+    GAP_SDK_DIR = os.environ["GAP_SDK_HOME"]
 except EnvironmentError:
     raise EnvironmentError("Set the GAP_SDK_DIR_RAD env var first")
 
@@ -148,34 +166,16 @@ CODES_CONFIG = {
         "timeout": GENERAL_TIMEOUT,
         "make_parameters": ["run"]
     },
-    #
-    # MEM_TEST: {
-    #     "path": f"{EXAMPLES_PMSIS_DIR}/{MEM_TEST}",
-    #     "exec": [
-    #         f"gapy", "--target=gapuino_v2", "--platform=board",
-    #         f"--work-dir={EXAMPLES_PMSIS_DIR}/{MEM_TEST}/BUILD/GAP8_V2/GCC_RISCV",
-    #         "run", "--exec-prepare", "--exec",
-    #         f"--binary={EXAMPLES_PMSIS_DIR}/{MEM_TEST}/BUILD/GAP8_V2/GCC_RISCV/{MEM_TEST}"
-    #     ],
-    #     "timeout": 100,
-    # },
-    #
-    # MOBILENET_V1: {
-    #     "path": f"{SETUP_PATH}/mobilenet",
-    #     "exec": 'openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" -f '
-    #             f'"{GAP_SDK_DIR}/utils/openocd_tools/tcl/'
-    #             f'gapuino_ftdi.cfg" -f "{GAP_SDK_DIR}/utils/'
-    #             'openocd_tools/tcl/gap9revb.tcl" -c "load_and_start_binary {GIT_RESEARCH}/'
-    #             'gap9riscvsetup/dnnradtestgap9/mobilenet/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/imagenet 0x1c010100"',
-    #     "timeout": 300,
-    #     "make_parameters": ["MOBNET_VERSION=1"]
-    # },
-    # MOBILENET_V2: {
-    #     "path": f"{SETUP_PATH}/mobilenet",
-    #     "exec": [],
-    #     "timeout": GENERAL_TIMEOUT,
-    #     "make_parameters": ["MOBNET_VERSION=2"]
-    # }
+    FPU_MICROBENCHMARKS: {
+        "path": f"{BENCHMARKS_DIR}/{FPU_MICROBENCHMARKS}",
+        "exec": f"""openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" 
+        -f "/home/fernando/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gapuino_ftdi.cfg" 
+        -f "/home/fernando/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gap9revb.tcl" 
+        -c "load_and_start_binary /home/fernando/git_research/gap9radsetup/gap9radsetup/benchmarks/
+{FPU_MICROBENCHMARKS}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/testFPU 0x1c010100""",
+        "timeout": GENERAL_TIMEOUT,
+        "make_parameters": ["run"]
+    }
 }
 
 VFS_PERFORMANCE = "performance"
@@ -248,7 +248,7 @@ def exec_cmd(cmd: str, path_to_execute: str, app_timeout: float, verbose_level: 
                 addition_info.append(target)
                 cmd_stdout = cmd_stdout.replace(target, "")
                 # print(cmd_stdout)
-            if re.match(r"RATIT:.* CORE:.* CYCLES_IN:.* CYCLES_OUT:.* INST_IN:.* INST_OUT:.*", target):
+            if re.match(r"RATIT:.* CORE:.* CYCLES_OUT:.* INST_OUT:.*", target):
                 cycle_line = target
             if re.match(r"RATIT:.* ITS:.* TIME_IT:.* CYCLE_IT:.* ACCTIME:.* ACCCYCLES:.*", target):
                 cycle_line = target
@@ -357,7 +357,9 @@ def main():
                         help="Enable or disable sequential errors check")
 
     parser.add_argument('--cnnop', default=None,
-                        help=f"If the benchmark is cnn,  inform which memory to test:{CNN_OPS_TO_TEST.keys()}")
+                        help=f"If the benchmark is cnn,  inform which CNNop to test:{CNN_OPS_TO_TEST.keys()}")
+    parser.add_argument('--fpuop', default=None,
+                        help=f"If the benchmark is cnn,  inform which FPU to test:{FPU_MICRO_TO_TEST.keys()}")
     parser.add_argument('--vfsprof', default=VFS_PERFORMANCE,
                         help=f"Voltage Frequenccy scaling, it can be {VFS_PERFORMANCE}, {VFS_ENERGY}, {VFS_MIDDLE}")
 
@@ -369,6 +371,8 @@ def main():
 
     if args.benchmark == CNN_OP:
         make_parameters = [CNN_OPS_TO_TEST[args.cnnop]]
+    if args.benchmark == FPU_MICROBENCHMARKS:
+        make_parameters = [FPU_MICRO_TO_TEST[args.fpuop]]
 
     make_parameters += [f"{k}={v}" for k, v in VFS_CONFIGURATIONS[args.vfsprof].items()]
     # FREQ_SET_FC=175 * 1000000, FREQ_SET_CL=250 * 1000000, VOLT_SET=1200
