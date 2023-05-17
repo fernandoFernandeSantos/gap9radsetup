@@ -27,8 +27,8 @@ MOBILENET_V1 = "mobilenetv1"
 MOBILENET_V2 = "mobilenetv2"
 
 MEMORIES_TO_TEST = {
-    "L1": "-DMEM_LEVEL=1",
-    "L2": "-DMEM_LEVEL=2"
+    "L1": "MEM_LEVEL=1",
+    "L2": "MEM_LEVEL=2"
 }
 
 # FPU microbenchmarks
