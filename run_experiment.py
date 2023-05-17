@@ -162,7 +162,7 @@ CODES_CONFIG = {
                 f'--openocd-script={GAP_SDK_DIR}/utils/openocd_tools/tcl/gap9revb.tcl '
                 f'--openocd-tools={GAP_SDK_DIR}/utils/openocd_tools '
                 f'--flash-property={GAP_SDK_DIR}/utils/ssbl/bin/ssbl-gap9_evk@mram:rom:binary run',
-        "timeout": GENERAL_TIMEOUT,
+        "timeout": 100,
         "make_parameters": ["run"]
     },
     FPU_MICROBENCHMARKS: {
