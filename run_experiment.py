@@ -61,7 +61,6 @@ FPU_MICRO_TO_TEST = dict(
 
 FPU_MICRO_TO_TEST = {k: f"TEST_MICRO_ID={v}" for k, v in FPU_MICRO_TO_TEST.items()}
 
-
 AFTER_REBOOT_SLEEPING_TIME = 60
 GENERAL_TIMEOUT = 50
 MAX_SEQUENTIALLY_ERRORS = 10
@@ -168,12 +167,13 @@ CODES_CONFIG = {
     },
     FPU_MICROBENCHMARKS: {
         "path": f"{BENCHMARKS_DIR}/{FPU_MICROBENCHMARKS}",
-        "exec": f"""openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" 
-        -f "/home/fernando/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gapuino_ftdi.cfg" 
-        -f "/home/fernando/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gap9revb.tcl" 
-        -c "load_and_start_binary /home/fernando/git_research/gap9radsetup/gap9radsetup/benchmarks/
-{FPU_MICROBENCHMARKS}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/testFPU 0x1c010100""",
-        "timeout": GENERAL_TIMEOUT,
+        "exec":
+            'openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" '
+            '-f "/home/fernando/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gapuino_ftdi.cfg" '
+            '-f "/home/fernando/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gap9revb.tcl" '
+            '-c "load_and_start_binary /home/fernando/git_research/gap9radsetup/gap9radsetup/benchmarks/'
+            'testFPU/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/testFPU 0x1c010100"',
+        "timeout": 60,
         "make_parameters": ["run"]
     }
 }
@@ -185,10 +185,10 @@ VFS_MIDDLE = "middle"
 
 # TODO: check if this make sense
 VFS_CONFIGURATIONS = {
-    VFS_PERFORMANCE: dict(FREQ_SET_FC=370, FREQ_SET_CL=370, VOLT_SET=800),
-    VFS_EXTREME: dict(FREQ_SET_FC=370, FREQ_SET_CL=370, VOLT_SET=650),
-    VFS_MIDDLE: dict(FREQ_SET_FC=300, FREQ_SET_CL=300, VOLT_SET=650),
-    VFS_ENERGY: dict(FREQ_SET_FC=240, FREQ_SET_CL=240, VOLT_SET=650),
+    VFS_PERFORMANCE: dict(FREQ_FC=370 * 1000 * 1000, FREQ_CL=370 * 1000 * 1000, VOLT_SET=800),
+    VFS_EXTREME:     dict(FREQ_FC=370 * 1000 * 1000, FREQ_CL=370 * 1000 * 1000, VOLT_SET=650),
+    VFS_MIDDLE:      dict(FREQ_FC=300 * 1000 * 1000, FREQ_CL=300 * 1000 * 1000, VOLT_SET=650),
+    VFS_ENERGY:      dict(FREQ_FC=240 * 1000 * 1000, FREQ_CL=240 * 1000 * 1000, VOLT_SET=650),
 }
 
 KILL_PROGRAM_LIST = ["gapy", "openocd"]
@@ -376,9 +376,9 @@ def main():
 
     make_parameters += [f"{k}={v}" for k, v in VFS_CONFIGURATIONS[args.vfsprof].items()]
     # FREQ_SET_FC=175 * 1000000, FREQ_SET_CL=250 * 1000000, VOLT_SET=1200
-    make_parameters += [f"FREQ_CL={VFS_CONFIGURATIONS[args.vfsprof]['FREQ_SET_CL']}",
-                        f"FREQ_FC={VFS_CONFIGURATIONS[args.vfsprof]['FREQ_SET_FC']}",
-                        f"FREQ_PE={VFS_CONFIGURATIONS[args.vfsprof]['FREQ_SET_FC']}",
+    make_parameters += [f"FREQ_CL={VFS_CONFIGURATIONS[args.vfsprof]['FREQ_CL']}",
+                        f"FREQ_FC={VFS_CONFIGURATIONS[args.vfsprof]['FREQ_FC']}",
+                        f"FREQ_PE={VFS_CONFIGURATIONS[args.vfsprof]['FREQ_FC']}",
                         f"VOLTAGE={VFS_CONFIGURATIONS[args.vfsprof]['VOLT_SET']}"]
     make_parameters += CODES_CONFIG[args.benchmark]["make_parameters"]
 
@@ -398,7 +398,7 @@ def main():
         script_name = os.path.basename(__file__)
         log_file = gen_log_file_name(f"GAP9-{args.benchmark}", log_dir=LOG_PATH)
         experiment_logger = logging_setup(logger_name=script_name, log_file=log_file, logging_level=logging.DEBUG)
-        reboot_usb_device(script_name=script_name, logger=experiment_logger, reboot=reboot_disable)
+        # reboot_usb_device(script_name=script_name, logger=experiment_logger, reboot=reboot_disable)
         args_info = " ".join([f"{k}:{v}" for k, v in vars(args).items()])
         experiment_logger.info(f"HEADER: {args_info}")
         benchmark = args.benchmark

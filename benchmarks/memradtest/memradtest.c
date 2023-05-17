@@ -7,12 +7,6 @@
 #define SETUP_RADIATION_ITERATIONS 60
 #endif
 
-/*
-A level 2 Memory (512KB) for all the cores
-A level 1 Memory (64 KB) shared by all the cores in Cluster
-A level 1 memory (8 KB) owned by FC
- */
-
 //does not work more than 120K on L1
 #define L1_SIZE (120 * 1024)
 //does not work more than 1500K on L2

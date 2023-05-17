@@ -67,4 +67,5 @@ add_executable(
 
         benchmarks/testFPU/main.c
         benchmarks/memradtest/memradtest.c
-)
+        benchmarks/mlGemm/mlGemm.c
+        benchmarks/Cifar10/Cifar10.c)

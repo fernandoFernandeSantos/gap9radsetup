@@ -23,9 +23,9 @@ static ALWAYS_INLINE__ void start_counters() {
     // Set to defaults
     pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, VOLT_SET);
     pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, VOLT_SET);
-    pi_freq_set(PI_FREQ_DOMAIN_FC, FREQ_FC * 1000 * 1000);
-    pi_freq_set(PI_FREQ_DOMAIN_CL, FREQ_CL * 1000 * 1000);
-    pi_freq_set(PI_FREQ_DOMAIN_PERIPH, FREQ_PE * 1000 * 1000);
+    pi_freq_set(PI_FREQ_DOMAIN_FC, FREQ_FC);
+    pi_freq_set(PI_FREQ_DOMAIN_CL, FREQ_CL);
+    pi_freq_set(PI_FREQ_DOMAIN_PERIPH, FREQ_PE);
 
     pi_perf_conf(1 << PI_PERF_CYCLES | 1 << PI_PERF_INSTR);
     pi_perf_reset();
@@ -48,6 +48,7 @@ static ALWAYS_INLINE__ void end_counters() {
 }
 
 static ALWAYS_INLINE__ void begin_perf_iteration_i() {
+    pi_perf_reset();
     begin_rad_metrics_iteration.perf_cycles = pi_perf_read(PI_PERF_CYCLES);
     begin_rad_metrics_iteration.perf_inst = pi_perf_read(PI_PERF_INSTR);
 }
