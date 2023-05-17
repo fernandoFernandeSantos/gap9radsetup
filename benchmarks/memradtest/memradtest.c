@@ -87,5 +87,7 @@ void test_mem(void) {
 
 /* Program Entry. */
 int main(void) {
-    return pmsis_kickoff((void *) test_mem);
+//    return pmsis_kickoff((void *) test_mem);
+    test_mem();
+    return 0;
 }
