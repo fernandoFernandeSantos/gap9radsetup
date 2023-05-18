@@ -5,7 +5,7 @@
 #ifndef GAP_SDK_BEAM_PERFORMANCE_COUNTER_H
 #define GAP_SDK_BEAM_PERFORMANCE_COUNTER_H
 
-#define SETUP_RADIATION_ITERATIONS 256
+#define SETUP_RADIATION_ITERATIONS 2048
 #define ALWAYS_INLINE__ inline __attribute__((always_inline))
 
 #define gap_ncore() __builtin_pulp_CoreCount()

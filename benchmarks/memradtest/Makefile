@@ -11,7 +11,7 @@ APP_SRCS         = memradtest.c
 # App includes
 APP_INC	         =
 # Compiler flags
-APP_CFLAGS       = -DMEM_LEVEL=$(MEM_LEVEL)
+APP_CFLAGS       = MEM_LEVEL=$(MEM_LEVEL)
 # Linker flags
 APP_LDFLAGS      =
 

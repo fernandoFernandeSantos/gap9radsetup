@@ -16,6 +16,7 @@ from logger_formatter import logging_setup
 os.environ['TZ'] = 'Europe/London'
 
 MXM = "MatMult"
+FMXM = "MatMulNew"
 MMAD = "MatrixAdd"
 MNIST = "Mnist"
 FIR = "Fir"
@@ -61,10 +62,10 @@ FPU_MICRO_TO_TEST = dict(
 
 FPU_MICRO_TO_TEST = {k: f"TEST_MICRO_ID={v}" for k, v in FPU_MICRO_TO_TEST.items()}
 
-AFTER_REBOOT_SLEEPING_TIME = 60
+AFTER_REBOOT_SLEEPING_TIME = 20
 GENERAL_TIMEOUT = 50
 MAX_SEQUENTIALLY_ERRORS = 10
-SLEEP_AFTER_MULTIPLE_ERRORS = 120
+SLEEP_AFTER_MULTIPLE_ERRORS = 20
 
 try:
     GAP_SDK_DIR = os.environ["GAP_SDK_HOME"]
@@ -74,8 +75,9 @@ except EnvironmentError:
 SETUP_PATH = os.path.abspath(os.getcwd())
 BENCHMARKS_DIR = f"{SETUP_PATH}/benchmarks"
 
-HOST_IP = "130.246.247.140"
-SWITCH_IP = "130.246.247.141"
+HOST_IP = "192.168.1.200"
+SWITCH_IP = "1192.168.1.102"
+SWITCH_PORT = 8
 
 CODES_CONFIG = {
     MXM: {
@@ -92,6 +94,17 @@ CODES_CONFIG = {
                 f'--openocd-script={GAP_SDK_DIR}/utils/openocd_tools/tcl/gap9revb.tcl '
                 f'--openocd-tools={GAP_SDK_DIR}/utils/openocd_tools '
                 f'--flash-property={GAP_SDK_DIR}/utils/ssbl/bin/ssbl-gap9_evk@mram:rom:binary run',
+        "timeout": GENERAL_TIMEOUT,
+        "make_parameters": ["run"]
+    },
+    FMXM: {
+        "path": f"{BENCHMARKS_DIR}/{FMXM}",
+        "exec": 'openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled"'
+                ' -f "/home/fernando/git_research/gap9radsetup/gap_sdk_private/utils/o'
+                'penocd_tools/tcl/gapuino_ftdi.cfg"'
+                ' -f "/home/fernando/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gap9revb.tcl"'
+                ' -c "load_and_start_binary /home/fernando/git_research/gap9radsetup/gap9radsetup/benchmarks/'
+                'MatMulNew/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/test 0x1c010100"',
         "timeout": GENERAL_TIMEOUT,
         "make_parameters": ["run"]
     },
@@ -333,7 +346,7 @@ def reboot_usb_device(script_name: str, logger: logging.Logger, reboot: bool):
     logger.info(f"Rebooting USB device")
     reboot_machine.reboot_machine(
         address=HOST_IP,
-        switch_model="lindy", switch_port=8, switch_ip=SWITCH_IP, rebooting_sleep=AFTER_REBOOT_SLEEPING_TIME / 2,
+        switch_model="lindy", switch_port=SWITCH_PORT, switch_ip=SWITCH_IP, rebooting_sleep=AFTER_REBOOT_SLEEPING_TIME,
         logger_name=script_name
     )
     logger.info(f"AFTER_REBOOT_SLEEPING_TIME: {AFTER_REBOOT_SLEEPING_TIME}s")
@@ -398,7 +411,7 @@ def main():
         script_name = os.path.basename(__file__)
         log_file = gen_log_file_name(f"GAP9-{args.benchmark}", log_dir=LOG_PATH)
         experiment_logger = logging_setup(logger_name=script_name, log_file=log_file, logging_level=logging.DEBUG)
-        # reboot_usb_device(script_name=script_name, logger=experiment_logger, reboot=reboot_disable)
+        reboot_usb_device(script_name=script_name, logger=experiment_logger, reboot=reboot_disable)
         args_info = " ".join([f"{k}:{v}" for k, v in vars(args).items()])
         experiment_logger.info(f"HEADER: {args_info}")
         benchmark = args.benchmark
