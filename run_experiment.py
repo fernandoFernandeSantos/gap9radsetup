@@ -100,10 +100,10 @@ CODES_CONFIG = {
     FMXM: {
         "path": f"{BENCHMARKS_DIR}/{FMXM}",
         "exec": 'openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled"'
-                ' -f "/home/fernando/git_research/gap9radsetup/gap_sdk_private/utils/o'
+                ' -f "/home/carol/git_research/gap9radsetup/gap_sdk_private/utils/o'
                 'penocd_tools/tcl/gapuino_ftdi.cfg"'
-                ' -f "/home/fernando/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gap9revb.tcl"'
-                ' -c "load_and_start_binary /home/fernando/git_research/gap9radsetup/gap9radsetup/benchmarks/'
+                ' -f "/home/carol/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gap9revb.tcl"'
+                ' -c "load_and_start_binary /home/carol/git_research/gap9radsetup/gap9radsetup/benchmarks/'
                 'MatMulNew/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/test 0x1c010100"',
         "timeout": GENERAL_TIMEOUT,
         "make_parameters": ["run"]
@@ -182,9 +182,9 @@ CODES_CONFIG = {
         "path": f"{BENCHMARKS_DIR}/{FPU_MICROBENCHMARKS}",
         "exec":
             'openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" '
-            '-f "/home/fernando/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gapuino_ftdi.cfg" '
-            '-f "/home/fernando/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gap9revb.tcl" '
-            '-c "load_and_start_binary /home/fernando/git_research/gap9radsetup/gap9radsetup/benchmarks/'
+            '-f "/home/carol/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gapuino_ftdi.cfg" '
+            '-f "/home/carol/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gap9revb.tcl" '
+            '-c "load_and_start_binary /home/carol/git_research/gap9radsetup/gap9radsetup/benchmarks/'
             'testFPU/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/testFPU 0x1c010100"',
         "timeout": 60,
         "make_parameters": ["run"]
