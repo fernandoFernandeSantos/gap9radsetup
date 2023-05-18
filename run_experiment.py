@@ -76,7 +76,7 @@ SETUP_PATH = os.path.abspath(os.getcwd())
 BENCHMARKS_DIR = f"{SETUP_PATH}/benchmarks"
 
 HOST_IP = "192.168.1.200"
-SWITCH_IP = "1192.168.1.102"
+SWITCH_IP = "192.168.1.102"
 SWITCH_PORT = 8
 
 CODES_CONFIG = {
