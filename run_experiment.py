@@ -99,12 +99,11 @@ CODES_CONFIG = {
     },
     FMXM: {
         "path": f"{BENCHMARKS_DIR}/{FMXM}",
-        "exec": 'openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled"'
-                ' -f "/home/carol/git_research/gap9radsetup/gap_sdk_private/utils/o'
-                'penocd_tools/tcl/gapuino_ftdi.cfg"'
-                ' -f "/home/carol/git_research/gap9radsetup/gap_sdk_private/utils/openocd_tools/tcl/gap9revb.tcl"'
-                ' -c "load_and_start_binary /home/carol/git_research/gap9radsetup/gap9radsetup/benchmarks/'
-                'MatMulNew/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/test 0x1c010100"',
+        "exec": 'openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" '
+                '-f "/home/carol/gap_sdk_private/utils/openocd_tools/tcl/gapuino_ftdi.cfg" '
+                '-f "/home/carol/gap_sdk_private/utils/openocd_tools/tcl/gap9revb.tcl" '
+                '-c "load_and_start_binary /home/carol/gap9radsetup/benchmarks/MatMulNew/BUILD/'
+                'GAP9_V2/GCC_RISCV_FREERTOS/test 0x1c010100"',
         "timeout": GENERAL_TIMEOUT,
         "make_parameters": ["run"]
     },
