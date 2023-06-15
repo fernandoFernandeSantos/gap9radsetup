@@ -105,7 +105,7 @@ static void cluster_main() {
 #endif
         }
     }
-    printf("ERROR MAX --- %f\n", MaxErrfp32);
+//    printf("ERROR MAX --- %f\n", MaxErrfp32);
 //    SNRfp32 = 10.f * log10f(SumSquared / SNRfp32);
 //    SNRFix = 10.f * log10f(SumSquared / SNRFix);
 //    SNRfp16 = 10.f * log10f(SumSquared / SNRfp16);
