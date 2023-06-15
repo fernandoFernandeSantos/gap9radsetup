@@ -68,4 +68,7 @@ add_executable(
         benchmarks/testFPU/main.c
         benchmarks/memradtest/memradtest.c
         benchmarks/mlGemm/mlGemm.c
-        benchmarks/Cifar10/Cifar10.c benchmarks/MatMulNew/MatMulModel.c benchmarks/MatMulNew/MatMulRunTest.c benchmarks/MatMulNew/golden.h)
+        benchmarks/Cifar10/Cifar10.c
+        benchmarks/MatMulNew/MatMulModel.c
+        benchmarks/MatMulNew/MatMulRunTest.c
+        benchmarks/MatMulNew/golden.h)

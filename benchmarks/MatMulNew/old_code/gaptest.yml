@@ -1,0 +1,25 @@
+name: mat_mult_new
+boards:
+    - gap9evk
+builder: cmake
+platforms: 
+    - board
+    - gvsoc
+os: 
+    - freertos
+    - pulpos
+chips: 
+    - gap9
+variants:
+    std:
+        name: standard
+        tags:
+            - integration
+            - release
+        duration: standard
+        os: 
+           - pulpos
+           - freertos
+        chips:
+            - gap9
+        flags: ~
