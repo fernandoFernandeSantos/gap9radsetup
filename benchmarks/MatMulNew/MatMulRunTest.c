@@ -28,7 +28,7 @@
 PI_L2 float *M1fp32, *M2fp32, *Outfp32;
 //PI_L2 short int *M1Fix16, *M2Fix16, *OutFix16;
 //PI_L2 F16_DSP *M1fp16, *M2fp16, *Outfp16;
-#ifdef GENERAGE_GOLDEN
+#ifdef GENERATE_GOLDEN
 PI_L2 float *OutGT;
 #else
 
