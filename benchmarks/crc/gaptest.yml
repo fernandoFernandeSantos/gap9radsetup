@@ -1,0 +1,36 @@
+name: crc32
+builder: cmake
+platforms:
+    - gvsoc
+    - board
+boards:
+    - gap9evk
+    - gap9audio
+    - gap9evk
+os:
+    - freertos
+    - pulpos
+chips:
+    - gap9
+variants:
+    std:
+        name: standard
+        tags:
+            - integration
+            - release
+        duration: standard
+        flags: ~
+    xip_std:
+        name: xip_std
+        tags:
+            - integration
+            - release
+        duration: standard
+        flags: ~
+    xip_custom_conf:
+        name: xip_custon_conf
+        tags:
+            - integration
+            - release
+        duration: standard
+        flags: USE_CUSTOM_XIP=1

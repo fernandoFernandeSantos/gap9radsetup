@@ -215,6 +215,11 @@ void run_MatMult(void) {
 //        if (its == 34) Outfp32[34] = 333333;
         errors = compare_output();
     }
+
+    // Free the memory
+    AT_L2_FREE(0, M1fp32, W_M1 * H_M1 * sizeof(float));
+    AT_L2_FREE(0, M2fp32, W_M2 * H_M2 * sizeof(float));
+    AT_L2_FREE(0, Outfp32, W_Out * H_Out * sizeof(float));
     printf("Close cluster after end of computation.\n");
     pi_cluster_close(&cluster_dev);
 #else
