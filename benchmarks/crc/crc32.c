@@ -24,7 +24,12 @@ typedef DWORD UNS_32_BITS;
 
 //static int benchmark_body(long long rpt);
 
-static const int random_values[] = {6, 3, 2, 1, 9, 5, 4, 7};
+#define MAX_CORE_NUMBER 8
+#define SETUP_ITERATIONS 1024
+#define GOLDEN_VALUE 11433
+
+static const int random_values[MAX_CORE_NUMBER] = {6, 3, 2, 1, 9, 5, 4, 7};
+static DWORD bench_output[MAX_CORE_NUMBER] = {0};
 
 
 /* Cluster main entry, executed by core 0. */
@@ -90,7 +95,7 @@ DWORD crc32pseudo() {
 }
 
 
-int benchmark_body(int rpt) {
+DWORD benchmark_body(int rpt) {
     int i;
     DWORD r;
 
@@ -99,7 +104,7 @@ int benchmark_body(int rpt) {
         r = crc32pseudo();
     }
 
-    return (int) (r % 32768);
+    return (r % 32768);
 }
 
 
@@ -108,26 +113,26 @@ void cluster_code(void *arg) {
     //int sF = random_values[core_id];
     int sF = random_values[core_id];
     //int res = benchmark_body (LOCAL_SCALE_FACTOR * pi_freq_get(PI_FREQ_DOMAIN_FC)/100000* sF);
-    int res = benchmark_body(sF);
-    printf("the scale factor is : %d for the [%d %d] Core ! and the res is : %d\n", sF, cluster_id, core_id, res);
+    bench_output[core_id] = benchmark_body(sF);
+//    printf("the scale factor is : %d for the [%d %d] Core ! and the res is : %d\n", sF, cluster_id, core_id, res);
 }
 
 
 void cluster_delegate(void *arg) {
-    printf("Cluster master core entry\n");
+//    printf("Cluster master core entry\n");
     pi_cl_team_fork(pi_cl_cluster_nb_cores(), cluster_code, arg);
-    printf("Cluster master core exit\n");
+//    printf("Cluster master core exit\n");
 }
 
 
 /* Program Entry. */
 int main(void) {
-    printf("\n\n\t *** CRC32 in GAP9 ***\n\n");
-    printf("Entering main controller\n");
+//    printf("\n\n\t *** CRC32 in GAP9 ***\n\n");
+//    printf("Entering main controller\n");
 
     uint32_t errors = 0;
     uint32_t core_id = pi_core_id(), cluster_id = pi_cluster_id();
-    printf("Start\n");
+    printf("CRC SETUP_ITERATIONS:%d\n", SETUP_ITERATIONS);
 
     struct pi_device cluster_dev;
     struct pi_cluster_conf cl_conf;
@@ -151,10 +156,21 @@ int main(void) {
 
     /* Prepare cluster task and send it to cluster. */
     struct pi_cluster_task cl_task;
-    pi_cluster_send_task_to_cl(&cluster_dev, pi_cluster_task(&cl_task, cluster_delegate, NULL));
+    pi_cluster_task(&cl_task, cluster_delegate, NULL);
+    const DWORD golden_value = GOLDEN_VALUE;
+    for (int its = 0, errors = 0; its < SETUP_ITERATIONS && errors == 0; its++) {
+        pi_cluster_send_task_to_cl(&cluster_dev, &cl_task);
+        for (int core = 0; core < MAX_CORE_NUMBER; core++) {
+            if (bench_output[core] != golden_value) {
+                printf("Error Core[%d]=%ld %ld\n", core, bench_output[core], golden_value);
+                errors++;
+            }
+        }
+    }
+
     pi_cluster_close(&cluster_dev);
 
-    printf("Bye !\n");
+    printf("Test passed!\n");
 
     return errors;
 }
