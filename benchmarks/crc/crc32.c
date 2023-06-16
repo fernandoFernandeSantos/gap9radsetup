@@ -75,28 +75,33 @@ static const UNS_32_BITS crc_32_tab[] = {    /* CRC polynomial 0xedb88320 */
         0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-DWORD
-crc32pseudo() {
+DWORD crc32pseudo() {
     int i;
     register DWORD oldcrc32;
+
     oldcrc32 = 0xFFFFFFFF;
+    unsigned int fun_seed = 0;
 
     for (i = 0; i < 1024; ++i) {
-        oldcrc32 = UPDC32 (rand_beebs(), oldcrc32);
+        oldcrc32 = UPDC32 (rand_beebs_smt(&fun_seed), oldcrc32);
     }
 
     return ~oldcrc32;
 }
 
 
-int benchmark_body(long long rpt) {
+int benchmark_body(int rpt) {
     int i;
     DWORD r;
+
     for (i = 0; i < rpt; i++) {
+        srand_beebs(0);
         r = crc32pseudo();
     }
+
     return (int) (r % 32768);
 }
+
 
 void cluster_code(void *arg) {
     uint32_t core_id = pi_core_id(), cluster_id = pi_cluster_id();

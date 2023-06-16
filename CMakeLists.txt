@@ -71,4 +71,4 @@ add_executable(
         benchmarks/Cifar10/Cifar10.c
         benchmarks/MatMulNew/MatMulModel.c
         benchmarks/MatMulNew/MatMulRunTest.c
-        benchmarks/MatMulNew/golden.h benchmarks/crc/crc32.c)
+        benchmarks/MatMulNew/golden.h benchmarks/crc/crc32.c benchmarks/crc/beebsc.c)
