@@ -1,12 +1,90 @@
 #!/usr/bin/python3
-import argparse
 import logging
 import os
 import time
 import common
-from run_experiment_rad import reboot_usb_device, load_the_golds, gen_log_file_name, kill_after_error
-from run_experiment_rad import program_and_generate_golds, logging_setup, exec_cmd
+import re
+import subprocess
+from run_experiment_rad import load_the_golds, gen_log_file_name, kill_after_error
+from run_experiment_rad import program_and_generate_golds, logging_setup
 from common import Timer
+
+
+def reboot_usb_device(logger: logging.Logger, reboot: bool):
+    if reboot is False:
+        return
+    logger.info(f"Rebooting USB device")
+
+    # TODO: Implement a function that can turn off and on the BOARD
+    raise NotImplementedError
+
+
+def set_electromagnetic_fi_parameters(logger: logging.Logger):
+    # TODO: Check the parameters of the EM FI to try it automatically
+    #  -- The amplitude and the slope and duration
+    raise NotImplementedError
+
+
+def exec_cmd(cmd: str, path_to_execute: str, app_timeout: float, verbose_level: int, logger: logging.Logger):
+    # TODO:
+    #  Implement a script to turn off and on the EM FI (fpga thing)
+    raise NotImplementedError
+    # print(f"EXECUTING " + " ".join(cmd))
+    env = {}
+    env.update(os.environ)
+    cwd = os.getcwd()
+    os.chdir(path_to_execute)
+    addition_info = list()
+    cycle_line, error_cycle_line = None, None
+    cmd_stdout, cmd_stderr = "", ""
+    if verbose_level == 2:
+        logger.debug(cmd)
+    try:
+        p = subprocess.Popen(cmd, env=env, cwd=path_to_execute, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             universal_newlines=True, shell=True)
+        cmd_stdout, cmd_stderr = p.communicate(timeout=app_timeout)
+        # remove time from result
+        split_stderr = cmd_stderr.split("\n")
+        cmd_stderr = cmd_stderr.replace(split_stderr[0], "")
+        if verbose_level == 2:
+            logger.debug("---------------STDOUT-----------------")
+            logger.debug(cmd_stdout)
+            logger.debug("---------------STDERR-----------------")
+            logger.debug(cmd_stderr)
+            logger.debug("--------------------------------------")
+        split_stdout = cmd_stdout.split('\n')
+        addition_info_list = ["cycle", "diff"]
+        for i in range(len(split_stdout)):
+            target = split_stdout[i]
+            if any([add_info in target.lower() for add_info in addition_info_list]):
+                addition_info.append(target)
+                cmd_stdout = cmd_stdout.replace(target, "")
+                # print(cmd_stdout)
+            if re.match(r"RATIT:.* CORE:.* CYCLES_OUT:.* INST_OUT:.*", target):
+                cycle_line = target
+            if re.match(r"RATIT:.* ITS:.* TIME_IT:.* CYCLE_IT:.* ACCTIME:.* ACCCYCLES:.*", target):
+                cycle_line = target
+
+            if re.match(r"ITS:.* CORE:.* CYCLES_T1:.* CYCLES_T2:.* INST_T1:.* INST_T2:.*", target):
+                error_cycle_line = target
+
+            if re.match(r"ITS:.* TIME_IT:.* CYCLE_IT:.* CYCLES:.* TIME:.*", target):
+                error_cycle_line = target
+
+    except subprocess.TimeoutExpired:
+        cmd_stderr = "TIMEOUT_ERROR"
+    except RuntimeError:
+        cmd_stderr = "RUNTIME_ERROR"
+    except UnicodeError:
+        cmd_stderr = "UNICODE_ERROR"
+    os.chdir(cwd)
+
+    # print("================================")
+    # print(cmd_stdout)
+    # print("================================")
+
+    return dict(stdout=cmd_stdout, stderr=cmd_stderr, additional_info=addition_info, cycle_line=cycle_line,
+                error_cycle_line=error_cycle_line)
 
 
 def main():
@@ -46,10 +124,12 @@ def main():
         script_name = os.path.basename(__file__)
         log_file = gen_log_file_name(f"GAP9-{args.benchmark}", log_dir=common.LOG_PATH)
         experiment_logger = logging_setup(logger_name=script_name, log_file=log_file, logging_level=logging.DEBUG)
-        reboot_usb_device(script_name=script_name, logger=experiment_logger, reboot=reboot_disable)
+        reboot_usb_device(logger=experiment_logger, reboot=reboot_disable)
         args_info = " ".join([f"{k}:{v}" for k, v in vars(args).items()])
         experiment_logger.info(f"HEADER: {args_info}")
         benchmark = args.benchmark
+        experiment_logger.info("Setting the EM parameters")
+        set_electromagnetic_fi_parameters(logger=experiment_logger)
 
         golds_dict = load_the_golds(golds_path=common.DATA_DIR, benchmark=args.benchmark)
         benchmark_gold_output = golds_dict[args.benchmark]
@@ -64,7 +144,7 @@ def main():
             # perform the data processing
             timer.tic()
             current_iteration_data = exec_cmd(cmd=bench_exec, app_timeout=bench_timeout, path_to_execute=bench_path,
-                                              verbose_level=1)
+                                              verbose_level=1, logger=experiment_logger)
             timer.toc()
             acc_time += timer.diff_time
 
@@ -90,11 +170,12 @@ def main():
                 kill_after_error()
                 if iteration_errors == past_errors_count:
                     sequential_errors += 1
+                    # TODO: Check if this is necessary for the EM experiments
                     if sequential_errors > common.MAX_SEQUENTIALLY_ERRORS and disable_sequential_errors_check is False:
                         experiment_logger.error(
                             f"MAXIMUM NUMBER OF SEQUENTIALLY ERRORS REACHED SLEEPING FOR "
                             f"{common.SLEEP_AFTER_MULTIPLE_ERRORS + common.AFTER_REBOOT_SLEEPING_TIME} seconds")
-                        reboot_usb_device(script_name=script_name, logger=experiment_logger, reboot=reboot_disable)
+                        reboot_usb_device(logger=experiment_logger, reboot=reboot_disable)
                         time.sleep(common.SLEEP_AFTER_MULTIPLE_ERRORS)
 
                         sequential_errors = 0

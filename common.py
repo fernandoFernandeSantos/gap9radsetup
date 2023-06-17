@@ -67,11 +67,6 @@ HOST_IP = "192.168.1.200"
 SWITCH_IP = "192.168.1.102"
 SWITCH_PORT = 8
 
-# TODO:
-#  Implement a script to turn off and on the EM FI (fpga thing)
-#  Implement a function that can turn off and on the BOARD
-#  Check the parameters of the EM FI to try it automatically
-#  -- The amplitude and the slope and duration
 
 CODES_CONFIG = {
     MXM: {
