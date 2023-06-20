@@ -11,8 +11,9 @@ from common import Timer
 
 # EM related imports
 from benches.code.generators import AVRK4
+from benches.code.helpers import ip_connection
+
 # import fake_avrk4 as AVRK4
-# from benches.code.helpers import ip_connection
 import pint
 
 # ========== EM SETTINGS ================================
@@ -27,6 +28,11 @@ EM_AMPLITUDE_QUANTITY = 700
 
 # How many tries for each delay in the range
 EM_TRIES_PER_DELAY = 8
+
+# EM AVRK4
+EM_AVRK4_CONNECTION_IP = "192.168.0.101"
+EM_AVRK4_CONNECTION_PORT = 23
+EM_AVRK4_CONNECTION_CONF = None
 # ======================================================
 
 RASPBERRY_REBOOT_COMMAND = "python3 /home/carol/reboot.py"
@@ -104,10 +110,10 @@ def main():
         #  -- The amplitude and the slope and duration
         # Setting things for EM
         ureg = pint.UnitRegistry()
-        # avrk4_ip = ip_connection.IpConnection("127.0.0.1", port=8)
-        # configuration = None
-        # avrk4 = AVRK4.AVRK4(connection=avrk4_ip, configuration=configuration)
-        avrk4 = AVRK4.AVRK4()
+        avrk4 = AVRK4.AVRK4(
+            connection=ip_connection.IpConnection(EM_AVRK4_CONNECTION_IP, EM_AVRK4_CONNECTION_PORT),
+            configuration=EM_AVRK4_CONNECTION_CONF
+        )
         # Set amplitude
         avrk4.set_ext_trig()
         amplitude = pint.Quantity(EM_AMPLITUDE_QUANTITY, ureg.volt)
