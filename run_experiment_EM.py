@@ -20,14 +20,18 @@ import pint
 # Time that you wait to restart the injection after a reboot pin reboot
 EM_AFTER_REBOOT_SLEEPING_TIME = 1
 # Max sequential error defined for EM
-EM_MAX_SEQUENTIALLY_ERRORS = 1
+EM_MAX_SEQUENTIALLY_ERRORS = 2
 # Range for Delays
 EM_DELAY_RANGE = range(2700, 3500, 1)
+EM_AMPLITUDE_RANGE = range(-60, -70, -1)
 # Amplitude parameter in Quantity
 EM_AMPLITUDE_QUANTITY = 700
+# TODO: Implement the ctrl-c to shutdown the EM after finishing
+# TODO: The Trigger part is better if done by the target -- just an electrical signal
+# -- Reduce the number of MxM iterations
 
 # How many tries for each delay in the range
-EM_TRIES_PER_DELAY = 8
+EM_TRIES_PER_DELAY = 1
 
 # EM AVRK4
 EM_AVRK4_CONNECTION_IP = "192.168.0.101"
@@ -108,6 +112,7 @@ def main():
         # FIXME: To be debugged
         # TODO: Check the parameters of the EM FI to try it automatically
         #  -- The amplitude and the slope and duration
+        # TODO: The external TRIGGER HAS TO BE FROM OUTSIDE
         # Setting things for EM
         ureg = pint.UnitRegistry()
         avrk4 = AVRK4.AVRK4(
@@ -115,12 +120,10 @@ def main():
             configuration=EM_AVRK4_CONNECTION_CONF
         )
         # Set amplitude
-        avrk4.set_ext_trig()
-        amplitude = pint.Quantity(EM_AMPLITUDE_QUANTITY, ureg.volt)
-        delays = EM_DELAY_RANGE
-        avrk4.set_amplitude(amplitude)
+        # avrk4.set_ext_trig() # Only needed for the external trigger
         # Activate
         avrk4.activate()
+        experiment_logger.info("EM parameters set")
         # ==================================================
 
         golds_dict = load_the_golds(golds_path=common.DATA_DIR, benchmark=args.benchmark)
@@ -129,13 +132,17 @@ def main():
         bench_path = common.CODES_CONFIG[benchmark]["path"]
         bench_timeout = common.CODES_CONFIG[benchmark]["timeout"]
 
-        # iteration_errors = 0
+        iteration_errors = 0
         sequential_errors = 0
         iteration = 0
-        for delay in delays:
-            # Set trigger delay
-            delay_ns = pint.Quantity(delay, ureg.ns)
-            avrk4.set_trigger_delay(delay_ns)
+        # Set trigger delay
+        delay_ns = pint.Quantity(0, ureg.ns)
+        # avrk4.set_trigger_delay(delay_ns)
+
+        for am_range in EM_AMPLITUDE_RANGE:
+            amplitude = pint.Quantity(am_range, ureg.volt)
+            # delays = EM_DELAY_RANGE
+            avrk4.set_amplitude(amplitude)
 
             for try_delay in range(EM_TRIES_PER_DELAY):
                 # Activate before executing
@@ -163,23 +170,24 @@ def main():
                     experiment_logger.info(f"Iteration:{iteration} DIFF-STDERR-IDENTIFIED")
                     experiment_logger.error("\n" + current_iteration_data["stderr"])
                     stderr_count = 1
-                # past_errors_count = iteration_errors
+                past_errors_count = iteration_errors
                 iteration_errors = (stdout_count + stderr_count)
                 acc_errors += iteration_errors
                 if iteration_errors != 0:
-                    # if iteration_errors == past_errors_count:
-                    #     sequential_errors += 1
-                    #     if sequential_errors >= EM_MAX_SEQUENTIALLY_ERRORS:
-                    experiment_logger.error(f"REBOOTING AFTER ERROR, SLEEPING {EM_AFTER_REBOOT_SLEEPING_TIME} SECONDS")
-                    reboot_usb_device(logger=experiment_logger, reboot=reboot_disable)
-                    #         sequential_errors = 0
-                    # else:
-                    #     sequential_errors = 0
+                    if iteration_errors == past_errors_count:
+                        sequential_errors += 1
+                        if sequential_errors > EM_MAX_SEQUENTIALLY_ERRORS:
+                            experiment_logger.error(
+                                f"REBOOTING AFTER ERROR, SLEEPING {EM_AFTER_REBOOT_SLEEPING_TIME} SECONDS")
+                            reboot_usb_device(logger=experiment_logger, reboot=False)
+                            sequential_errors = 0
+                    else:
+                        sequential_errors = 0
 
                 cycle_str = current_iteration_data["cycle_line"]
                 error_cycle_line = current_iteration_data["error_cycle_line"]
 
-                experiment_logger.info(f"Iteration:{iteration} Delay:{delay} delay_ns:{delay_ns} delay_try:{try_delay} "
+                experiment_logger.info(f"Iteration:{iteration} Amplitude:{am_range} delay_try:{try_delay} "
                                        f"time:{timer} it_errors:{iteration_errors} acc_time:{acc_time} "
                                        f"acc_errors:{acc_errors} seq_errors:{sequential_errors} cycle_str:{cycle_str} "
                                        f"err_cycle:{error_cycle_line}")
