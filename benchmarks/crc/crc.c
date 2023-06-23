@@ -17,6 +17,7 @@ typedef unsigned long DWORD;
 typedef unsigned short WORD;
 
 #define UPDC32(octet, crc) (crc_32_tab[((crc)^((BYTE)octet)) & 0xff] ^ ((crc) >> 8))
+#define PAD_EM_TRIGGER    (PI_PAD_001) //I take the first one as an example
 
 /* Need an unsigned type capable of holding 32 bits; */
 
@@ -25,7 +26,7 @@ typedef DWORD UNS_32_BITS;
 //static int benchmark_body(long long rpt);
 
 #define MAX_CORE_NUMBER 8
-#define SETUP_ITERATIONS 1024
+#define SETUP_ITERATIONS 32
 #define GOLDEN_VALUE 11433
 
 static const int random_values[MAX_CORE_NUMBER] = {6, 3, 2, 1, 9, 5, 4, 7};
@@ -98,9 +99,15 @@ DWORD crc32pseudo() {
 DWORD benchmark_body(int rpt) {
     int i;
     DWORD r;
-
+    pi_gpio_e Em_pin = PAD_EM_TRIGGER;
+    pi_pad_function_set(PAD_EM_TRIGGER, PI_PAD_FUNC1);
+    pi_gpio_flags_e flags = PI_GPIO_OUTPUT;
+    int32_t resConfig = pi_gpio_pin_configure(Em_pin, flags);
+    int32_t resToggle = pi_gpio_pin_toggle(Em_pin);
+    
     for (i = 0; i < rpt; i++) {
         srand_beebs(0);
+        
         r = crc32pseudo();
     }
 
@@ -159,13 +166,16 @@ int main(void) {
     pi_cluster_task(&cl_task, cluster_delegate, NULL);
     const DWORD golden_value = GOLDEN_VALUE;
     for (int its = 0, errors = 0; its < SETUP_ITERATIONS && errors == 0; its++) {
+    	uint32_t start = pi_time_get_us();
         pi_cluster_send_task_to_cl(&cluster_dev, &cl_task);
+        uint32_t end = pi_time_get_us();
+        printf("The timer is : %d at the iteration %d\n",end-start, its);
         for (int core = 0; core < MAX_CORE_NUMBER; core++) {
             if (bench_output[core] != golden_value) {
                 printf("Error Core[%d]=%ld %ld\n", core, bench_output[core], golden_value);
                 errors++;
             }
-        }
+        }  
     }
 
     pi_cluster_close(&cluster_dev);
