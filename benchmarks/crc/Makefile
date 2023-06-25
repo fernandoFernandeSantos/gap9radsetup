@@ -1,6 +1,6 @@
 # User Test
 #------------------------------------
-APP              = test
+APP              = crc
 # App sources
 APP_SRCS         = crc32.c beebsc.c
 # App includes
