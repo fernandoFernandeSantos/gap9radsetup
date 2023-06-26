@@ -28,6 +28,19 @@ typedef DWORD UNS_32_BITS;
 #define MAX_CORE_NUMBER 8
 #define SETUP_ITERATIONS 32
 #define GOLDEN_VALUE 11433
+#define GPIO_PAD1 (PI_PAD_068)
+#define GPIO_PIN1 (PI_GPIO_A68)
+
+#define GPIO_PAD2 (PI_PAD_086)
+#define GPIO_PIN2 (PI_GPIO_A86)
+
+
+#define DELAY_MS 500 * 1000
+
+/* Variables used. */
+//struct pi_device gpio_a1;
+//struct pi_device gpio_led;
+//struct pi_gpio_conf gpio_conf;
 
 static const int random_values[MAX_CORE_NUMBER] = {6, 3, 2, 1, 9, 5, 4, 7};
 static DWORD bench_output[MAX_CORE_NUMBER] = {0};
@@ -99,11 +112,6 @@ DWORD crc32pseudo() {
 DWORD benchmark_body(int rpt) {
     int i;
     DWORD r;
-    pi_gpio_e Em_pin = PAD_EM_TRIGGER;
-    pi_pad_function_set(PAD_EM_TRIGGER, PI_PAD_FUNC1);
-    pi_gpio_flags_e flags = PI_GPIO_OUTPUT;
-    int32_t resConfig = pi_gpio_pin_configure(Em_pin, flags);
-    int32_t resToggle = pi_gpio_pin_toggle(Em_pin);
     
     for (i = 0; i < rpt; i++) {
         srand_beebs(0);
@@ -161,12 +169,36 @@ int main(void) {
         pmsis_exit(-1);
     }
 
+    //Setting pad to alternate 1
+    //GPIO A1
+    pi_pad_function_set(GPIO_PAD1, PI_PAD_FUNC1);
+    //GPIO LED (A3)
+    pi_pad_function_set(GPIO_PAD2, PI_PAD_FUNC1);
+
+    pi_gpio_e gpio_out_a1 = GPIO_PIN1;
+    pi_gpio_e gpio_out_led = GPIO_PIN2;
+
+    /* Configure gpio output. */
+    pi_gpio_flags_e cfg_flags = PI_GPIO_OUTPUT;
+    pi_gpio_pin_configure(gpio_out_a1, cfg_flags);
+    pi_gpio_pin_configure(gpio_out_led, cfg_flags);
+
+
     /* Prepare cluster task and send it to cluster. */
     struct pi_cluster_task cl_task;
     pi_cluster_task(&cl_task, cluster_delegate, NULL);
     const DWORD golden_value = GOLDEN_VALUE;
+    int32_t res = pi_i2c_open(&cluster_dev); //open the connection
     for (int its = 0, errors = 0; its < SETUP_ITERATIONS && errors == 0; its++) {
     	uint32_t start = pi_time_get_us();
+        /*triggering the EM machine*/
+        pi_time_wait_us(DELAY_MS);
+        printf("Return from write %d\n", pi_gpio_pin_write(gpio_out_a1, 0));
+        pi_gpio_pin_write(gpio_out_led, 0);
+        pi_time_wait_us(DELAY_MS);
+        pi_gpio_pin_write(gpio_out_a1, 1);
+        pi_gpio_pin_write(gpio_out_led, 1);
+        /*sending message to cluster*/
         pi_cluster_send_task_to_cl(&cluster_dev, &cl_task);
         uint32_t end = pi_time_get_us();
         printf("The timer is : %d at the iteration %d\n",end-start, its);
@@ -177,10 +209,9 @@ int main(void) {
             }
         }  
     }
-
     pi_cluster_close(&cluster_dev);
 
     printf("Test passed!\n");
-
+    pmsis_exit(errors);
     return errors;
 }
