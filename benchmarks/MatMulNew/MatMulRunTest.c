@@ -10,10 +10,12 @@
 #include <stdio.h>
 
 #ifndef __EMUL__
-    #include "pmsis.h"
+
+#include "pmsis.h"
+
 #else
-    #include <stdlib.h>
-    #define pmsis_exit(a)   exit(a)
+#include <stdlib.h>
+#define pmsis_exit(a)   exit(a)
 #endif
 
 #include "Gap.h"
@@ -25,43 +27,59 @@
 
 PI_L2 float *M1fp32, *M2fp32, *Outfp32;
 
+#define FLOAT_DIFF_THRESHOLD 0.0f
+#define SETUP_ITERATIONS 32
+#define MAX_CORE_NUMBER 8
+#define SETUP_ITERATIONS 32
+#define GOLDEN_VALUE 11433
+#define GPIO_PAD1 (PI_PAD_068)
+#define GPIO_PIN1 (PI_GPIO_A68)
+
+#define GPIO_PAD2 (PI_PAD_086)
+#define GPIO_PIN2 (PI_GPIO_A86)
+
+
+#define DELAY_MS 500 * 1000
+
 #ifdef GENERATE_GOLDEN
-    PI_L2 float *OutGT;
+PI_L2 float *OutGT;
 #else
-    #include "golden.h"
+
+#include "golden.h"
+
 #endif
 extern char *L1_Memory;
 
-int errors, W_Out, H_Out, H_M2;
+int W_Out, H_Out, H_M2;
 
 
 static void cluster_main() {
     //printf("cluster master start\n");
 
-#ifdef PERF
-    gap_cl_starttimer();
-    gap_cl_resethwtimer();
-#endif
+//#ifdef PERF
+//    gap_cl_starttimer();
+//    gap_cl_resethwtimer();
+//#endif
 
     /* fp32 */
     int start = gap_cl_readhwtimer();
     MatMul_fp32(M1fp32, M2fp32, Outfp32);
     int elapsedfp32 = gap_cl_readhwtimer() - start;
-    errors = 0;
-    float MaxErrfp32 = 0.0f;
-    float SumSquared = 0.0f;
-    for (int h = 0; h < H_Out; h++) {
-        for (int w = 0; w < W_Out; w++) {
-            float diff = fabsf(Outfp32[h * W_Out + w] != OutGT[h * W_Out + w]);
-            if (diff > 0.0f) {
-                errors++;
-                printf("Error fp32 in [%d, %d]: %e != %e\n", h, w, Outfp32[h * W_Out + w], OutGT[h * W_Out + w]);
-                if (diff > MaxErrfp32) {
-                    MaxErrfp32 = diff;
-                }
-            }
-        }
-    }
+//    errors = 0;
+////    float MaxErrfp32 = 0.0f;
+//    float SumSquared = 0.0f;
+//    for (int h = 0; h < H_Out; h++) {
+//        for (int w = 0; w < W_Out; w++) {
+//            float diff = fabsf(Outfp32[h * W_Out + w] != OutGT[h * W_Out + w]);
+//            if (diff > 0.0f) {
+//                errors++;
+//                printf("Error[%d, %d]: %f != %f\n", h, w, Outfp32[h * W_Out + w], OutGT[h * W_Out + w]);
+////                if (diff > MaxErrfp32) {
+////                    MaxErrfp32 = diff;
+////                }
+//            }
+//        }
+//    }
 }
 
 void generate_golden(int print_to_file) {
@@ -78,7 +96,7 @@ void generate_golden(int print_to_file) {
     if (print_to_file == 1) {
         // Just checking if the types are the same size
         if (sizeof(uint32_t) != sizeof(float)) {
-            printf("Failed to allocate fp32 and Fix16 Matrixes\n");
+            printf("Float and uint32_t don't have the same size\n");
             pmsis_exit(-1);
         }
         printf(
@@ -87,8 +105,7 @@ void generate_golden(int print_to_file) {
                 "\n"
                 "PI_L2 uint32_t reinterpret_pointer_global[] = {\n"
         );
-        uint32_t * reinterpreted_pointer = (uint32_t * )
-        OutGT;
+        uint32_t * reinterpreted_pointer = (uint32_t*) OutGT;
         for (int h = 0; h < H_M1; h++) {
             for (int w2 = 0; w2 < W_M2; w2++) {
                 printf("0x%X, ", reinterpreted_pointer[h * W_M2 + w2]);
@@ -105,28 +122,16 @@ void generate_golden(int print_to_file) {
 
 int compare_output() {
     int errors = 0;
-#ifndef GENERATE_GOLDEN
-//    float max = -99999.f;
     for (int h = 0; h < H_Out; h++) {
         for (int w = 0; w < W_Out; w++) {
-            if (fabs(Outfp32[h * W_Out + w] - OutGT[h * W_Out + w]) > 5.859375e-03) {
+            if (Outfp32[h * W_Out + w] != OutGT[h * W_Out + w]) {
                 errors++;
-                printf("Error[%d, %d]: %e != %e\n", h, w, Outfp32[h * W_Out + w], OutGT[h * W_Out + w]);
+                printf("Error[%d, %d]: %f != %f\n", h, w, Outfp32[h * W_Out + w], OutGT[h * W_Out + w]);
             }
-            //max = fmax(fabs(Outfp32[h * W_Out + w] - OutGT[h * W_Out + w]), max);
             // Set to zero for the next iteration
             Outfp32[h * W_Out + w] = 0.0f;
         }
     }
-//    printf("MAX %e\n", max);
-#else
-    printf("\n{");
-    for (int i = 0; i < H_Out * W_Out; i++) {
-        printf("%e, ", Outfp32[i]);
-    }
-    printf("};\n");
-
-#endif
     return errors;
 }
 
@@ -152,9 +157,9 @@ void run_MatMult(void) {
     int num_op = H_M1 * W_M2 * (W_M1 + H_M2 - 1);
     int AllocatedSpace = (sizeof(float) + sizeof(short)) * (W_M1 * H_M1 + W_M2 * H_M2 + W_Out * H_Out) +
                          sizeof(float) * W_Out * H_Out;
-#ifdef __gap9__
-    AllocatedSpace += sizeof(short) * (W_M1*H_M1 + W_M2*H_M2 + W_Out*H_Out);
-#endif
+//#ifdef __gap9__
+//    AllocatedSpace += sizeof(short) * (W_M1*H_M1 + W_M2*H_M2 + W_Out*H_Out);
+//#endif
 
     M1fp32 = (float *) AT_L2_ALLOC(0, W_M1 * H_M1 * sizeof(float));
     M2fp32 = (float *) AT_L2_ALLOC(0, W_M2 * H_M2 * sizeof(float));
@@ -180,9 +185,9 @@ void run_MatMult(void) {
     }
 
     /* Init Data */
-    int QIN = 15 - gap_fl1(W_M1);
-    printf("QIN: %d\n", QIN);
-    int Norm = QIN;
+//    int QIN = 15 - gap_fl1(W_M1);
+//    printf("QIN: %d\n", QIN);
+//    int Norm = QIN;
     if (H_M1 != H_M2 || W_M1 != W_M2) {
         printf("This code only works on equal sized matrices\n");
         pmsis_exit(-3);
@@ -192,10 +197,10 @@ void run_MatMult(void) {
         M2fp32[tt] = tt * 0.0011f;
     }
 
-#ifdef PERF
-    gap_fc_starttimer();
-    gap_fc_resethwtimer();
-#endif
+//#ifdef PERF
+//    gap_fc_starttimer();
+//    gap_fc_resethwtimer();
+//#endif
     int start = gap_fc_readhwtimer();
 #ifdef GENERATE_GOLDEN
     generate_golden(1);
@@ -209,17 +214,51 @@ void run_MatMult(void) {
     pi_cluster_task(&task, cluster_main, NULL);
 
 #ifndef GENERATE_GOLDEN
-    const int setup_it = 1000;
+    const int setup_it = SETUP_ITERATIONS;
 #else
     const int setup_it = 1;
 #endif
 
+    //Setting pad to alternate 1
+    //GPIO A1
+    pi_pad_function_set(GPIO_PAD1, PI_PAD_FUNC1);
+    //GPIO LED (A3)
+    pi_pad_function_set(GPIO_PAD2, PI_PAD_FUNC1);
+
+    pi_gpio_e gpio_out_a1 = GPIO_PIN1;
+    pi_gpio_e gpio_out_led = GPIO_PIN2;
+
+    /* Configure gpio output. */
+    pi_gpio_flags_e cfg_flags = PI_GPIO_OUTPUT;
+    pi_gpio_pin_configure(gpio_out_a1, cfg_flags);
+    pi_gpio_pin_configure(gpio_out_led, cfg_flags);
+
     /* Offloading Task to cluster. */
-   int errors = 0, its;
-    for (its = 0; (its < setup_it) & (errors == 0); its++) {
+    int errors = 0;
+    for (int its = 0; (its < setup_it) & (errors == 0); its++) {
+    	uint32_t start = pi_time_get_us();
+        
+        /*triggering the EM machine*/
+        pi_time_wait_us(DELAY_MS);
+        printf("Return from write %d\n", pi_gpio_pin_write(gpio_out_a1, 0));
+        pi_gpio_pin_write(gpio_out_led, 0);
+        pi_time_wait_us(DELAY_MS);
+        pi_gpio_pin_write(gpio_out_a1, 1);
+        pi_gpio_pin_write(gpio_out_led, 1);
+        /*sending task to cluster*/
         pi_cluster_send_task(&cluster_dev, &task);
+        uint32_t end = pi_time_get_us();
+        
+//        if (its == 34) Outfp32[34] = 333333;
         errors = compare_output();
+        uint32_t comp = pi_time_get_us();
+        printf("The timer is before comparison is : %d  and after %d at the iteration %d\n",end-start, comp-end, its);
     }
+
+    // Free the memory
+    AT_L2_FREE(0, M1fp32, W_M1 * H_M1 * sizeof(float));
+    AT_L2_FREE(0, M2fp32, W_M2 * H_M2 * sizeof(float));
+    AT_L2_FREE(0, Outfp32, W_Out * H_Out * sizeof(float));
     printf("Close cluster after end of computation.\n");
     pi_cluster_close(&cluster_dev);
 #else
