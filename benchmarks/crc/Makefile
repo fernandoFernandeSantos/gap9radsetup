@@ -2,7 +2,7 @@
 #------------------------------------
 APP              = crc
 # App sources
-APP_SRCS         = crc32.c beebsc.c
+APP_SRCS         = crc.c beebsc.c
 # App includes
 APP_INC	         =
 # Compiler flags

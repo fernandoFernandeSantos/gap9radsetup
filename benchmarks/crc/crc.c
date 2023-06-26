@@ -8,45 +8,25 @@
 #include <time.h>
 #include <math.h>
 
-
-#define LOCAL_SCALE_FACTOR 2
-
 /* Some basic types.  */
 typedef unsigned char BYTE;
 typedef unsigned long DWORD;
 typedef unsigned short WORD;
 
+#define LOCAL_SCALE_FACTOR 2
 #define UPDC32(octet, crc) (crc_32_tab[((crc)^((BYTE)octet)) & 0xff] ^ ((crc) >> 8))
-#define PAD_EM_TRIGGER    (PI_PAD_001) //I take the first one as an example
-
-/* Need an unsigned type capable of holding 32 bits; */
-
-typedef DWORD UNS_32_BITS;
-
-//static int benchmark_body(long long rpt);
-
 #define MAX_CORE_NUMBER 8
 #define SETUP_ITERATIONS 32
 #define GOLDEN_VALUE 11433
 #define GPIO_PAD1 (PI_PAD_068)
 #define GPIO_PIN1 (PI_GPIO_A68)
-
-#define GPIO_PAD2 (PI_PAD_086)
-#define GPIO_PIN2 (PI_GPIO_A86)
-
-
 #define DELAY_MS 500 * 1000
 
-/* Variables used. */
-//struct pi_device gpio_a1;
-//struct pi_device gpio_led;
-//struct pi_gpio_conf gpio_conf;
+/* Need an unsigned type capable of holding 32 bits; */
+typedef DWORD UNS_32_BITS;
 
 static const int random_values[MAX_CORE_NUMBER] = {6, 3, 2, 1, 9, 5, 4, 7};
 static DWORD bench_output[MAX_CORE_NUMBER] = {0};
-
-
-/* Cluster main entry, executed by core 0. */
 
 static const UNS_32_BITS crc_32_tab[] = {    /* CRC polynomial 0xedb88320 */
         0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
@@ -97,54 +77,38 @@ static const UNS_32_BITS crc_32_tab[] = {    /* CRC polynomial 0xedb88320 */
 DWORD crc32pseudo() {
     int i;
     register DWORD oldcrc32;
-
     oldcrc32 = 0xFFFFFFFF;
     unsigned int fun_seed = 0;
-
     for (i = 0; i < 1024; ++i) {
         oldcrc32 = UPDC32 (rand_beebs_smt(&fun_seed), oldcrc32);
     }
-
     return ~oldcrc32;
 }
-
 
 DWORD benchmark_body(int rpt) {
     int i;
     DWORD r;
-    
     for (i = 0; i < rpt; i++) {
         srand_beebs(0);
-        
         r = crc32pseudo();
     }
-
     return (r % 32768);
 }
 
-
 void cluster_code(void *arg) {
     uint32_t core_id = pi_core_id(), cluster_id = pi_cluster_id();
-    //int sF = random_values[core_id];
     int sF = random_values[core_id];
-    //int res = benchmark_body (LOCAL_SCALE_FACTOR * pi_freq_get(PI_FREQ_DOMAIN_FC)/100000* sF);
     bench_output[core_id] = benchmark_body(sF);
-//    printf("the scale factor is : %d for the [%d %d] Core ! and the res is : %d\n", sF, cluster_id, core_id, res);
 }
 
-
 void cluster_delegate(void *arg) {
-//    printf("Cluster master core entry\n");
     pi_cl_team_fork(pi_cl_cluster_nb_cores(), cluster_code, arg);
-//    printf("Cluster master core exit\n");
 }
 
 
 /* Program Entry. */
 int main(void) {
 //    printf("\n\n\t *** CRC32 in GAP9 ***\n\n");
-//    printf("Entering main controller\n");
-
     uint32_t errors = 0;
     uint32_t core_id = pi_core_id(), cluster_id = pi_cluster_id();
     printf("CRC SETUP_ITERATIONS:%d\n", SETUP_ITERATIONS);
@@ -169,45 +133,37 @@ int main(void) {
         pmsis_exit(-1);
     }
 
-    //Setting pad to alternate 1
+    /* Configure gpio output. */
     //GPIO A1
     pi_pad_function_set(GPIO_PAD1, PI_PAD_FUNC1);
-    //GPIO LED (A3)
-    pi_pad_function_set(GPIO_PAD2, PI_PAD_FUNC1);
-
-    pi_gpio_e gpio_out_a1 = GPIO_PIN1;
-    pi_gpio_e gpio_out_led = GPIO_PIN2;
-
+    pi_gpio_e gpio_out_trigger_pin = GPIO_PIN1;
     /* Configure gpio output. */
     pi_gpio_flags_e cfg_flags = PI_GPIO_OUTPUT;
-    pi_gpio_pin_configure(gpio_out_a1, cfg_flags);
-    pi_gpio_pin_configure(gpio_out_led, cfg_flags);
-
+    pi_gpio_pin_configure(gpio_out_trigger_pin, cfg_flags);
+    // Start with the pin on 0
+    pi_gpio_pin_write(gpio_out_trigger_pin, 0);
 
     /* Prepare cluster task and send it to cluster. */
-    struct pi_cluster_task cl_task;
-    pi_cluster_task(&cl_task, cluster_delegate, NULL);
-    const DWORD golden_value = GOLDEN_VALUE;
-    int32_t res = pi_i2c_open(&cluster_dev); //open the connection
-    for (int its = 0, errors = 0; its < SETUP_ITERATIONS && errors == 0; its++) {
-    	uint32_t start = pi_time_get_us();
-        /*triggering the EM machine*/
-        pi_time_wait_us(DELAY_MS);
-        printf("Return from write %d\n", pi_gpio_pin_write(gpio_out_a1, 0));
-        pi_gpio_pin_write(gpio_out_led, 0);
-        pi_time_wait_us(DELAY_MS);
-        pi_gpio_pin_write(gpio_out_a1, 1);
-        pi_gpio_pin_write(gpio_out_led, 1);
-        /*sending message to cluster*/
-        pi_cluster_send_task_to_cl(&cluster_dev, &cl_task);
+    //struct pi_cluster_task cl_task;
+    //pi_cluster_task(&cl_task, cluster_delegate, NULL);
+
+    for (int its = 0; (its < setup_it) & (errors == 0); its++) {
+        pi_gpio_pin_write(gpio_out_trigger_pin, 1);
+    #if MEASURE_TIME == 1
+        uint32_t start = pi_time_get_us();
+    #endif
+        pi_cluster_send_task(&cluster_dev, &task);
+    #if MEASURE_TIME == 1
         uint32_t end = pi_time_get_us();
-        printf("The timer is : %d at the iteration %d\n",end-start, its);
-        for (int core = 0; core < MAX_CORE_NUMBER; core++) {
-            if (bench_output[core] != golden_value) {
-                printf("Error Core[%d]=%ld %ld\n", core, bench_output[core], golden_value);
-                errors++;
-            }
-        }  
+    #endif
+        pi_gpio_pin_write(gpio_out_trigger_pin, 0);
+
+//        if (its == 5) Outfp32[34] = 333333;
+        errors = compare_output();
+    #if MEASURE_TIME == 1
+        uint32_t comp = pi_time_get_us();
+        printf("Kernel Time:%d  Compare Time:%d Iteration:%d\n", end - start, comp - end, its);
+    #endif
     }
     pi_cluster_close(&cluster_dev);
 
