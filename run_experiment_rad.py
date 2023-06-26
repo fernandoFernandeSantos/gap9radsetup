@@ -62,9 +62,13 @@ def exec_cmd(cmd: str, path_to_execute: str, app_timeout: float, verbose_level: 
             print("--------------------------------------")
         split_stdout = cmd_stdout.split('\n')
         addition_info_list = ["cycle", "diff"]
-        for i in range(len(split_stdout)):
-            target = split_stdout[i]
-            if any([add_info in target.lower() for add_info in addition_info_list]):
+        openocd_stdout_info_list = [r"TAP: gap\d+.\S+", "jtag init", r"ret(\d+)=([0-9A-Fa-f]+)", r"ret=([0-9A-Fa-f]+)"]
+        for target in split_stdout:  # range(len(split_stdout)):
+            # target = split_stdout[i]
+            if any(
+                    [add_info in target.lower() for add_info in addition_info_list] +
+                    [re.match(add_info, target) is not None for add_info in openocd_stdout_info_list]
+            ):
                 addition_info.append(target)
                 cmd_stdout = cmd_stdout.replace(target, "")
                 # print(cmd_stdout)
@@ -78,7 +82,8 @@ def exec_cmd(cmd: str, path_to_execute: str, app_timeout: float, verbose_level: 
 
             if re.match(r"ITS:.* TIME_IT:.* CYCLE_IT:.* CYCLES:.* TIME:.*", target):
                 error_cycle_line = target
-
+        # Remove first new lines
+        cmd_stdout = cmd_stdout.lstrip("\n")
     except subprocess.TimeoutExpired:
         cmd_stderr = "TIMEOUT_ERROR"
     except RuntimeError:

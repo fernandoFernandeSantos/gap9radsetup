@@ -68,22 +68,13 @@ HOST_IP = "192.168.1.200"
 SWITCH_IP = "192.168.1.102"
 SWITCH_PORT = 8
 
-
 CODES_CONFIG = {
-CRC: {
+    CRC: {
         "path": f"{BENCHMARKS_DIR}/{CRC}",
-        "exec": f'{GAP_SDK_DIR}/utils/gapy_v2/bin/gapy '
-                f'--target=gap9.evk '
-                f'--target-dir={GAP_SDK_DIR}/utils/gapy_v2/targets '
-                f'--platform=board '
-                f'--work-dir={BENCHMARKS_DIR}/{CRC}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS '
-                f'--binary={BENCHMARKS_DIR}/{CRC}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{CRC} '
-                f'--config-opt=**/runner/boot/mode=jtag    '
-                f'--flash-property=0@flash:lfs:size '
-                f'--openocd-cable={GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg '
-                f'--openocd-script={GAP_SDK_DIR}/utils/openocd_tools/tcl/gap9revb.tcl '
-                f'--openocd-tools={GAP_SDK_DIR}/utils/openocd_tools '
-                f'--flash-property={GAP_SDK_DIR}/utils/ssbl/bin/ssbl-gap9_evk@mram:rom:binary run',
+        "exec": 'openocd -d0 -c "gdb_port disabled; telnet_port disabled; tcl_port disabled" '
+                f'-f "{GAP_SDK_DIR}/utils/openocd_tools/tcl/gapuino_ftdi.cfg" '
+                f'-f "{GAP_SDK_DIR}/utils/openocd_tools/tcl/gap9revb.tcl" '
+                f'-c "load_and_start_binary {BENCHMARKS_DIR}/{CRC}/BUILD/GAP9_V2/GCC_RISCV_FREERTOS/{CRC} 0x1c010100"',
         "timeout": GENERAL_TIMEOUT,
         "make_parameters": ["run"]
     },

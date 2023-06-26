@@ -28,7 +28,12 @@
 PI_L2 float *M1fp32, *M2fp32, *Outfp32;
 
 #define FLOAT_DIFF_THRESHOLD 0.0f
-#define SETUP_ITERATIONS 1000
+#define SETUP_ITERATIONS 32
+
+#define MEASURE_TIME 0
+
+#define GPIO_PAD1 (PI_PAD_068)
+#define GPIO_PIN1 (PI_GPIO_A68)
 
 #ifdef GENERATE_GOLDEN
 PI_L2 float *OutGT;
@@ -51,9 +56,9 @@ static void cluster_main() {
 //#endif
 
     /* fp32 */
-    int start = gap_cl_readhwtimer();
+//    int start = gap_cl_readhwtimer();
     MatMul_fp32(M1fp32, M2fp32, Outfp32);
-    int elapsedfp32 = gap_cl_readhwtimer() - start;
+//    int elapsedfp32 = gap_cl_readhwtimer() - start;
 //    errors = 0;
 ////    float MaxErrfp32 = 0.0f;
 //    float SumSquared = 0.0f;
@@ -125,7 +130,7 @@ int compare_output() {
 }
 
 void run_MatMult(void) {
-#ifndef __EMUL__
+//#ifndef __EMUL__
     struct pi_device cluster_dev;
     struct pi_cluster_conf conf;
     /* Init cluster configuration structure. */
@@ -138,7 +143,7 @@ void run_MatMult(void) {
         printf("Cluster open failed !\n");
         pmsis_exit(-2);
     }
-#endif
+//#endif
     printf("Matrix Mult start\n");
     W_Out = W_M2;
     H_Out = H_M1;
@@ -149,6 +154,15 @@ void run_MatMult(void) {
 //#ifdef __gap9__
 //    AllocatedSpace += sizeof(short) * (W_M1*H_M1 + W_M2*H_M2 + W_Out*H_Out);
 //#endif
+
+    //GPIO A1
+    pi_pad_function_set(GPIO_PAD1, PI_PAD_FUNC1);
+    pi_gpio_e gpio_out_trigger_pin = GPIO_PIN1;
+    /* Configure gpio output. */
+    pi_gpio_flags_e cfg_flags = PI_GPIO_OUTPUT;
+    pi_gpio_pin_configure(gpio_out_trigger_pin, cfg_flags);
+    // Start with the pin on 0
+    pi_gpio_pin_write(gpio_out_trigger_pin, 0);
 
     M1fp32 = (float *) AT_L2_ALLOC(0, W_M1 * H_M1 * sizeof(float));
     M2fp32 = (float *) AT_L2_ALLOC(0, W_M2 * H_M2 * sizeof(float));
@@ -197,7 +211,7 @@ void run_MatMult(void) {
     int elapsedSeq = gap_fc_readhwtimer() - start;
 
 
-#ifndef __EMUL__
+//#ifndef __EMUL__
     /* Prepare cluster task and send it to cluster. */
     struct pi_cluster_task task;
     pi_cluster_task(&task, cluster_main, NULL);
@@ -211,9 +225,22 @@ void run_MatMult(void) {
     /* Offloading Task to cluster. */
     int errors = 0;
     for (int its = 0; (its < setup_it) & (errors == 0); its++) {
+        pi_gpio_pin_write(gpio_out_trigger_pin, 1);
+#if MEASURE_TIME == 1
+        uint32_t start = pi_time_get_us();
+#endif
         pi_cluster_send_task(&cluster_dev, &task);
-//        if (its == 34) Outfp32[34] = 333333;
+#if MEASURE_TIME == 1
+        uint32_t end = pi_time_get_us();
+#endif
+        pi_gpio_pin_write(gpio_out_trigger_pin, 0);
+
+//        if (its == 5) Outfp32[34] = 333333;
         errors = compare_output();
+#if MEASURE_TIME == 1
+        uint32_t comp = pi_time_get_us();
+        printf("Kernel Time:%d  Compare Time:%d Iteration:%d\n", end - start, comp - end, its);
+#endif
     }
 
     // Free the memory
@@ -222,9 +249,9 @@ void run_MatMult(void) {
     AT_L2_FREE(0, Outfp32, W_Out * H_Out * sizeof(float));
     printf("Close cluster after end of computation.\n");
     pi_cluster_close(&cluster_dev);
-#else
-    cluster_main();
-#endif
+//#else
+//    cluster_main();
+//#endif
 
     printf("Test Passed\n");
     pmsis_exit(0);
