@@ -130,6 +130,18 @@ int compare_output() {
 }
 
 void run_MatMult(void) {
+//    pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, VOLT_SET);
+//    pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, VOLT_SET);
+    pi_freq_set(PI_FREQ_DOMAIN_FC, FREQ_FC);
+    pi_freq_set(PI_FREQ_DOMAIN_CL, FREQ_CL);
+    pi_freq_set(PI_FREQ_DOMAIN_PERIPH, FREQ_PE);
+    pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, VOLT_SET);
+    pi_pmu_voltage_set(PI_PMU_VOLTAGE_DOMAIN_CHIP, VOLT_SET);
+
+    printf("constMxM VOLTAGE:%d FREQ_FC:%d FREQ_CL:%d\n", pi_pmu_voltage_get(PI_PMU_VOLTAGE_DOMAIN_CHIP),
+           pi_freq_get(PI_FREQ_DOMAIN_FC),
+           pi_freq_get(PI_FREQ_DOMAIN_CL));
+
 //#ifndef __EMUL__
     struct pi_device cluster_dev;
     struct pi_cluster_conf conf;

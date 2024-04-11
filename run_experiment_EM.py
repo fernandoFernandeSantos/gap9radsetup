@@ -23,7 +23,8 @@ EM_MAX_SEQUENTIALLY_ERRORS = 2
 # Range for Delays -- it is code related
 # It's the delay of the EM pulse
 EM_DELAY_RANGE = {
-    common.FMXM: range(0, 1, 1),
+    common.FMXM: range(100, 2000, 100),
+    # common.FMXM: range(0, 1, 1),
     common.CRC: range(0, 1, 1),
 }
 # Amplitude must be a range
